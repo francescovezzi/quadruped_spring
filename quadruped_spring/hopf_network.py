@@ -85,23 +85,32 @@ class HopfNetwork:
             ]
         )
 
-        self.PHI_walk = np.zeros((4, 4))
-        self.PHI_walk[0] = np.array([0, -np.pi, -np.pi / 2.0, np.pi / 2.0])
-        self.PHI_walk[1] = np.array([np.pi, 0, np.pi / 2.0, 3.0 * np.pi / 2.0])
-        self.PHI_walk[2] = np.array([np.pi / 2.0, -np.pi / 2.0, 0, np.pi])
-        self.PHI_walk[3] = np.array([-np.pi / 2.0, -3.0 * np.pi / 2.0, -np.pi, 0])
+        self.PHI_walk = np.pi * np.array(
+            [
+                [0, -1, -1 / 2, 1 / 2],
+                [1, 0, 1 / 2, 3 / 2],
+                [1 / 2, -1 / 2, 0, 1],
+                [-1 / 2, -3 / 2, -1, 0],
+            ]
+        )
 
-        self.PHI_bound = np.zeros((4, 4))
-        self.PHI_bound[0] = np.array([0, 0, -np.pi, -np.pi])
-        self.PHI_bound[1] = np.array([0, 0, -np.pi, -np.pi])
-        self.PHI_bound[2] = np.array([np.pi, np.pi, 0, 0])
-        self.PHI_bound[3] = np.array([np.pi, np.pi, 0, 0])
+        self.PHI_bound = np.pi * np.array(
+            [
+                [0, 0, -1, -1],
+                [0, 0, -1, -1],
+                [1, 1, 0, 0],
+                [1, 1, 0, 0],
+            ]
+        )
 
-        self.PHI_pace = np.zeros((4, 4))
-        self.PHI_pace[0] = np.array([0, -np.pi, 0, -np.pi])
-        self.PHI_pace[1] = np.array([np.pi, 0, np.pi, 0])
-        self.PHI_pace[2] = np.array([0, -np.pi, 0, -np.pi])
-        self.PHI_pace[3] = np.array([np.pi, 0, np.pi, 0])
+        self.PHI_pace = np.pi * np.array(
+            [
+                [0, -1, 0, -1],
+                [1, 0, 1, 0],
+                [0, -1, 0, -1],
+                [1, 0, 1, 0],
+            ]
+        )
 
         self.PHI = {
             "TROT": self.PHI_trot,
@@ -166,8 +175,8 @@ class HopfNetwork:
         # mod phase variables to keep between 0 and 2pi
         self.X[1, :] = self.X[1, :] % (2 * np.pi)
 
-        self.X_list.append(self.X.copy())
-        self.dX_list.append(X_dot)
+        # self.X_list.append(self.X.copy())
+        # self.dX_list.append(X_dot)
 
 
 if __name__ == "__main__":
@@ -190,10 +199,18 @@ if __name__ == "__main__":
         enable_springs=False,
     )
 
+    gait = "BOUND"
     # initialize Hopf Network, supply gait
+    omega_swing, omega_stance = {
+        "TROT": [64 * np.pi, 16 * np.pi],
+        "WALK": [24 * np.pi, 25 * np.pi],
+        "PACE": [20 * np.pi, 20 * np.pi],
+        "BOUND": [10 * np.pi, 40 * np.pi],
+    }[gait]
+
     # TROT
-    omega_swing = 64.0 * np.pi
-    omega_stance = 16.0 * np.pi
+    # omega_swing = 64.0 * np.pi
+    # omega_stance = 16.0 * np.pi
     # omega_swing = 16.0 * np.pi
     # omega_stance = 4.0 * np.pi
     # WALK
@@ -215,7 +232,7 @@ if __name__ == "__main__":
     duty_factor = d_stance / d_stride
     print("Duty Factor: ", duty_factor)
 
-    cpg = HopfNetwork(gait="TROT", omega_swing=omega_swing, omega_stance=omega_stance, time_step=TIME_STEP)
+    cpg = HopfNetwork(gait=gait, omega_swing=omega_swing, omega_stance=omega_stance, time_step=TIME_STEP)
 
     T = 10.0
     TEST_STEPS = int(T / (TIME_STEP))
