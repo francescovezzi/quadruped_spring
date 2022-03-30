@@ -1173,18 +1173,18 @@ class QuadrupedGymEnv(gym.Env):
 def test_env():
 
     env_config = {}
-    env_config['robot_model'] = 'GO1'
-    env_config['render'] = False
-    env_config['on_rack'] = False
-    env_config['motor_control_mode'] = 'PD'
-    env_config['action_repeat'] = 10
-    env_config['enable_springs'] = 10
-    env_config['add_noise'] = False
-    env_config['enable_action_interpolation'] = False
-    env_config['enable_action_clipping'] = False
-    env_config['enable_action_filter'] = False
-    env_config['task_env'] = "JUMPING_ON_PLACE_TASK"
-    env_config['observation_space_mode'] = "JUMPING_ON_PLACE_OBS"
+    env_config["robot_model"] = "GO1"
+    env_config["render"] = False
+    env_config["on_rack"] = False
+    env_config["motor_control_mode"] = "PD"
+    env_config["action_repeat"] = 10
+    env_config["enable_springs"] = 10
+    env_config["add_noise"] = False
+    env_config["enable_action_interpolation"] = False
+    env_config["enable_action_clipping"] = False
+    env_config["enable_action_filter"] = False
+    env_config["task_env"] = "JUMPING_ON_PLACE_TASK"
+    env_config["observation_space_mode"] = "JUMPING_ON_PLACE_OBS"
 
     env = QuadrupedGymEnv(**env_config)
     sim_steps = 1000

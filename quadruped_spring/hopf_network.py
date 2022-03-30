@@ -19,6 +19,7 @@ else:  # linux
     matplotlib.use("TkAgg")
 
 from matplotlib import pyplot as plt
+from stable_baselines3.common.utils import set_random_seed
 
 from env.quadruped_gym_env import QuadrupedGymEnv
 
@@ -75,11 +76,14 @@ class HopfNetwork:
         """For coupling oscillators in phase space.
         [TODO] update all coupling matrices
         """
-        self.PHI_trot = np.zeros((4, 4))
-        self.PHI_trot[0] = np.array([0, -np.pi, -np.pi, 0])
-        self.PHI_trot[1] = np.array([np.pi, 0, 0, np.pi])
-        self.PHI_trot[2] = np.array([np.pi, 0, 0, np.pi])
-        self.PHI_trot[3] = np.array([0, -np.pi, -np.pi, 0])
+        self.PHI_trot = np.pi * np.array(
+            [
+                [0, -1, -1, 0],
+                [1, 0, 0, 1],
+                [1, 0, 0, 1],
+                [0, -1, -1, 0],
+            ]
+        )
 
         self.PHI_walk = np.zeros((4, 4))
         self.PHI_walk[0] = np.array([0, -np.pi, -np.pi / 2.0, np.pi / 2.0])
@@ -99,20 +103,14 @@ class HopfNetwork:
         self.PHI_pace[2] = np.array([0, -np.pi, 0, -np.pi])
         self.PHI_pace[3] = np.array([np.pi, 0, np.pi, 0])
 
-        if gait == "TROT":
-            print("TROT")
-            self.PHI = self.PHI_trot
-        elif gait == "PACE":
-            print("PACE")
-            self.PHI = self.PHI_pace
-        elif gait == "BOUND":
-            print("BOUND")
-            self.PHI = self.PHI_bound
-        elif gait == "WALK":
-            print("WALK")
-            self.PHI = self.PHI_walk
-        else:
-            raise ValueError(gait + "not implemented.")
+        self.PHI = {
+            "TROT": self.PHI_trot,
+            "PACE": self.PHI_pace,
+            "BOUND": self.PHI_bound,
+            "WALK": self.PHI_walk,
+        }[gait]
+
+        print(gait)
 
     def update(self):
         """Update oscillator states."""
@@ -121,16 +119,15 @@ class HopfNetwork:
         self._integrate_hopf_equations()
 
         # map CPG variables to Cartesian foot xz positions (Equations 8, 9)
-        x = np.zeros(4)
-        z = np.zeros(4)
-        for i in range(4):
-            r = self.X[0, i]
-            theta = self.X[1, i]
-            x[i] = -self._des_step_len * r * np.cos(theta)
-            if np.sin(theta) > 0:
-                z[i] = -self._robot_height + self._ground_clearance * np.sin(theta)
-            else:
-                z[i] = -self._robot_height + self._ground_penetration * np.sin(theta)
+        r = self.X[0, :]
+        theta = self.X[1, :]
+        x = -self._des_step_len * r * np.cos(theta)
+
+        ground_clearance = self._ground_clearance * np.sin(theta)
+        ground_penetration = self._ground_penetration * np.sin(theta)
+        above_ground = np.sin(theta) > 0
+        ground_offset = above_ground * ground_clearance + (1.0 - above_ground) * ground_penetration
+        z = -self._robot_height + ground_offset
 
         return x, z
 
@@ -179,6 +176,7 @@ if __name__ == "__main__":
     TIME_STEP = 0.001
     foot_y = 0.0838  # this is the hip length
     sideSign = np.array([-1, 1, -1, 1])  # get correct hip sign (body right is negative)
+    set_random_seed(1)
 
     env = QuadrupedGymEnv(
         render=True,  # visualize
@@ -194,8 +192,10 @@ if __name__ == "__main__":
 
     # initialize Hopf Network, supply gait
     # TROT
-    omega_swing = 16.0 * np.pi
-    omega_stance = 4.0 * np.pi
+    omega_swing = 64.0 * np.pi
+    omega_stance = 16.0 * np.pi
+    # omega_swing = 16.0 * np.pi
+    # omega_stance = 4.0 * np.pi
     # WALK
     # omega_swing = 24.0 * np.pi
     # omega_stance = 25.0 * np.pi
