@@ -54,12 +54,12 @@ class JumpingOnPlaceHeight(TaskJumping):
             max_height_normalized = 1.0
         else:
             max_height_normalized = self._relative_max_height / max_height
-        reward += 0.8 * max_height_normalized
+        reward += 0.7 * max_height_normalized
 
         # Orientation -> Maintain the initial orientation if you can !
-        reward += max_height_normalized * 0.02 * np.exp(-self._max_yaw**2 / 0.15**2)  # orientation
-        reward += max_height_normalized * 0.02 * np.exp(-self._max_roll**2 / 0.15**2)  # orientation
-        reward += max_height_normalized * 0.1 * np.exp(-self._max_pitch**2 / 0.15**2)  # orientation
+        # reward += max_height_normalized * 0.02 * np.exp(-self._max_yaw**2 / 0.15**2)  # orientation
+        # reward += max_height_normalized * 0.02 * np.exp(-self._max_roll**2 / 0.15**2)  # orientation
+        reward += max_height_normalized * 0.3 * np.exp(-self._max_pitch**2 / 0.15**2)  # orientation
 
         # Position -> jump in place !
         # reward += max_height_normalized * 0.05 * np.exp(-self._max_forward_distance**2 / 0.05)
