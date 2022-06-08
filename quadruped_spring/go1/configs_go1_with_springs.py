@@ -92,7 +92,7 @@ RL_VELOCITY_LIMITS = 1.0 * np.asarray([10, 10, 10] * NUM_LEGS)  #  Used for nois
 
 # Sample Joint Gains
 MOTOR_KP = [75.0, 75.0, 75.0] * NUM_LEGS
-MOTOR_KD = [0.8, 0.8, 0.8] * NUM_LEGS
+MOTOR_KD = [0.8, 1.0, 1.0] * NUM_LEGS
 
 # MOTOR_KP = [55, 55, 55] * NUM_LEGS
 # MOTOR_KD = [0.8, 0.8, 0.8] * NUM_LEGS
