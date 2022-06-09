@@ -12,7 +12,7 @@ class JumpingOnPlaceHeight(TaskJumping):
     def __init__(self):
         super().__init__()
         self._height_min = 0.15
-        self._height_max = 0.4
+        self._height_max = 0.35
         self._max_height_task = self._compute_max_height_task()
 
     def on_curriculum_step(self):
