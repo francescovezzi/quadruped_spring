@@ -30,7 +30,6 @@ class MonitorState(gym.Wrapper):
         self._step_counter = 0
         self._torque_limits = self.quadruped._robot_config.TORQUE_LIMITS
         self._velocity_limits = self.quadruped._robot_config.VELOCITY_LIMITS
-        self._plot_done = False
         self._n_episodes = 1
         self._episode_counter = 0
 
@@ -94,6 +93,21 @@ class MonitorState(gym.Wrapper):
         self._base_or = np.asarray(self._base_or)
         self._feet_normal_forces = np.asarray(self._feet_normal_forces)
         self._pitch_rate = np.asarray(self._pitch_rate)
+        
+    def collect_data(self):
+        self._transform_to_array()
+        ret_keys = ['time', 'joint_angles', 'joint_velocities',
+                    'torques', 'spring_energy', 'spring_tau',
+                    'base_position', 'base_orientation', 'feet_forces',
+                    'pitch_rate']
+        ret_values = [self._time, self._config, self._motor_true_vel,
+                      self._motor_tau, self._energy_spring, self._tau_spring,
+                      self._base_pos, self._base_or, self._feet_normal_forces,
+                      self._pitch_rate]
+        ret = dict(zip(ret_keys, ret_values))
+        self._init_storage()
+        self._episode_counter = 0
+        return ret
 
     def _plot_normal_forces(self):
         fig, ax = plt.subplots()
