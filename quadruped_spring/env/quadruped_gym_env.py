@@ -560,7 +560,7 @@ def build_env():
         "add_noise": False,
         "enable_action_interpolation": False,
         "enable_action_filter": True,
-        "task_env": "JUMPING_ON_PLACE_HEIGHT",
+        "task_env": "JUMPING_IN_PLACE",
         "observation_space_mode": "ARS_HEIGHT",
         "action_space_mode": "SYMMETRIC",
         "enable_env_randomization": False,
