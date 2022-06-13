@@ -83,8 +83,8 @@ class TaskJumping(TaskBase):
 
     def _reset(self, env):
         super()._reset(env)
-        self._reset_params()
         self._env._last_action = self._env._ac_interface._load_springs(self._intermediate_settling_parameter_task)
+        self._reset_params()
         self._jump_counter = 0
         self._switched_controller = False
 
