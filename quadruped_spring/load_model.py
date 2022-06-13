@@ -17,19 +17,21 @@ from quadruped_spring.env.wrappers.rest_wrapper import RestWrapper
 from quadruped_spring.utils.monitor_state import MonitorState
 from quadruped_spring.utils.video_recording import VideoRec
 
+
 SEED = 24
 
 LEARNING_ALGS = {"ars": ARS}
 LEARNING_ALG = "ars"
 ENV_ID = "QuadrupedSpring-v0"
-ID = "1"
+ID = "10"
 
 REC_VIDEO = False
 SAVE_PLOTS = False
-RENDER = False
+RENDER = True
 EVAL_EPISODES = 10
-ENABLE_ENV_RANDOMIZATION = True
+ENABLE_ENV_RANDOMIZATION = False
 ENV_RANDOMIZER = "MASS_SETTLING_RANDOMIZER"
+CURRICULUM_LEVEL = 0.95
 
 
 def callable_env(env_id, wrappers, kwargs):
@@ -75,7 +77,7 @@ wrapper_list = loaded_args["hyperparams"]["env_wrapper"]
 # build env
 env_kwargs["enable_env_randomization"] = ENABLE_ENV_RANDOMIZATION
 env_kwargs["env_randomizer_mode"] = ENV_RANDOMIZER
-env_kwargs["curriculum_level"] = 0.95
+env_kwargs["curriculum_level"] = CURRICULUM_LEVEL
 env = callable_env(QuadrupedGymEnv, wrapper_list, env_kwargs)
 env = make_vec_env(env, n_envs=1)
 env = VecNormalize.load(stats_file, env)
