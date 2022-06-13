@@ -552,11 +552,11 @@ class QuadrupedGymEnv(gym.Env):
 
 def build_env():
     env_config = {
-        "render": False,
+        "render": True,
         "on_rack": False,
         "motor_control_mode": "PD",
         "action_repeat": 10,
-        "enable_springs": False,
+        "enable_springs": True,
         "add_noise": False,
         "enable_action_interpolation": False,
         "enable_action_filter": True,
@@ -565,6 +565,7 @@ def build_env():
         "action_space_mode": "SYMMETRIC",
         "enable_env_randomization": False,
         "env_randomizer_mode": "SETTLING_RANDOMIZER",
+        "curriculum_level": 1.0,
     }
     env = QuadrupedGymEnv(**env_config)
 
