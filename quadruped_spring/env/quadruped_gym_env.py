@@ -162,6 +162,7 @@ class QuadrupedGymEnv(gym.Env):
             self._env_randomizers._init(self)
 
         self.reset()
+        self.print_info()
 
     ######################################################################################
     # RL Observation and Action spaces
@@ -548,6 +549,17 @@ class QuadrupedGymEnv(gym.Env):
     def print_curriculum_info(self):
         """Print curriculum info."""
         self.task.print_curriculum_info()
+        
+    def print_info(self):
+        """Print environment info."""
+        print('\n*** Environment Info ***')
+        print(f'task environment -> {self.task_env}')
+        print(f'spring enabled -> {self._enable_springs}')
+        print(f'curriculum level -> {self.get_curriculum_level()}')
+        print(f'sensors -> {self._observation_space_mode}')
+        if self._enable_env_randomization:
+            print(f'env randomizer -> {self._env_randomizer_mode}')
+        print('')
 
 
 def build_env():
