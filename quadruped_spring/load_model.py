@@ -22,16 +22,19 @@ SEED = 24
 
 LEARNING_ALGS = {"ars": ARS}
 LEARNING_ALG = "ars"
+SUB_FOLDER = "15_06"
 ENV_ID = "QuadrupedSpring-v0"
-ID = "10"
+ID = "2"
 
 REC_VIDEO = False
-SAVE_PLOTS = False
-RENDER = True
-EVAL_EPISODES = 10
+SAVE_PLOTS = True
+RENDER = False
+EVAL_EPISODES = 1
 ENABLE_ENV_RANDOMIZATION = False
 ENV_RANDOMIZER = "MASS_SETTLING_RANDOMIZER"
-CURRICULUM_LEVEL = 0.95
+CURRICULUM_LEVEL = 0.2
+
+LOG_DIR = f"logs/{SUB_FOLDER}"
 
 
 def callable_env(env_id, wrappers, kwargs):
@@ -39,10 +42,10 @@ def callable_env(env_id, wrappers, kwargs):
         env = env_id(**kwargs)
         env = RestWrapper(env)
         if SAVE_PLOTS:
-            plot_folder = f"logs/plots/{LEARNING_ALG}_{ENV_ID}_{ID}"
+            plot_folder = os.path.join(LOG_DIR, 'plots', f"{LEARNING_ALG}_{ENV_ID}_{ID}")
             env = MonitorState(env, path=plot_folder)
         if REC_VIDEO:
-            video_folder = "logs/videos/"
+            video_folder = os.path.join(LOG_DIR, 'videos')
             video_name = f"{LEARNING_ALG}_{ENV_ID}_{ID}"
             env = VideoRec(env, video_folder, video_name)
         for wrapper in wrappers:
@@ -57,9 +60,9 @@ def callable_env(env_id, wrappers, kwargs):
 
 
 # define directories
-aux_dir = "logs/models"
+aux_dir = os.path.join(LOG_DIR, 'models')
 model_dir = os.path.join(currentdir, aux_dir, LEARNING_ALG, f"{ENV_ID}_{ID}")
-model_file = os.path.join(model_dir, "rl_model_12000000_steps")
+model_file = os.path.join(model_dir, "rl_model_22000000_steps")
 args_file = os.path.join(model_dir, ENV_ID, "args.yml")
 stats_file = os.path.join(model_dir, ENV_ID, "vecnormalize.pkl")
 
