@@ -564,7 +564,7 @@ class QuadrupedGymEnv(gym.Env):
 
 def build_env():
     env_config = {
-        "render": True,
+        "render": False,
         "on_rack": False,
         "motor_control_mode": "PD",
         "action_repeat": 10,
