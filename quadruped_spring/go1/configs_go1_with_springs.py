@@ -20,7 +20,7 @@ NUM_LEGS = 4
 MOTORS_PER_LEG = 3
 
 INIT_RACK_POSITION = [0, 0, 1]  # when hung up in air (for debugging)
-INIT_POSITION = [0, 0, 0.36]  # normal initial height
+INIT_POSITION = [0, 0, 0.32]  # normal initial height
 IS_FALLEN_HEIGHT = 0.10  # height at which robot is considered fallen
 
 INIT_ORIENTATION = (0, 0, 0, 1)
@@ -35,6 +35,10 @@ INIT_JOINT_ANGLES = np.array([DEFAULT_HIP_ANGLE, DEFAULT_THIGH_ANGLE, DEFAULT_CA
 INIT_MOTOR_ANGLES = INIT_JOINT_ANGLES
 ANGLE_LANDING_POSE = np.array([0.0, 1.0, -2.1] * NUM_LEGS)
 ANGLE_SETTLING_POSE = np.array([0.0, 1.14, -2.5] * NUM_LEGS)
+
+# ANGLE_LANDING_POSE = np.array([0.0, 1.0, -1.9] * NUM_LEGS)
+# ANGLE_SETTLING_POSE = np.array([0.0, 1.14, -2.19] * NUM_LEGS)
+
 # Used to convert the robot SDK joint angles to URDF joint angles.
 JOINT_DIRECTIONS = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 
