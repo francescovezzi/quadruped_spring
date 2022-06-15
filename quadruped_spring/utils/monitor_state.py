@@ -128,21 +128,22 @@ class MonitorState(gym.Wrapper):
     def _plot_normal_forces(self):
         fig, ax = plt.subplots()
         labels = ["RR", "RL", "FR", "FL"]
-        fig.suptitle("feet normal forces")
+        fig.suptitle(r"feet normal forces")
         ax.plot(self._time, self._feet_normal_forces)
         ax.set_xlabel("t")
         ax.set_ylabel("F", rotation=0)
-        box = ax.get_position()
-        ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
-        ax.legend(labels, loc="center left", bbox_to_anchor=(1, 0.5))
-        plt.tight_layout(rect=[0, 0, 0.75, 1])
+        ax.legend(labels)
+        # box = ax.get_position()
+        # ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+        # ax.legend(labels, loc="center left", bbox_to_anchor=(1, 0.5))
+        # plt.tight_layout(rect=[0, 0, 0.75, 1])
         return fig, ax
 
     def _plot_height(self):
         fig, ax = plt.subplots(nrows=1, ncols=1)
         height = self._base_pos[:, 2]
         ax.plot(self._time, height)
-        ax.set_title("height(t)")
+        fig.suptitle(r"height(t)")
         ax.set_xlabel("t")
         ax.set_ylabel("h", rotation=0)
         length = np.shape(self._time)[0]
@@ -248,7 +249,7 @@ class MonitorState(gym.Wrapper):
         title = "Jump forward motion"
         x_pos, z_pos = self._base_pos[:, 0], self._base_pos[:, 2]
         ax.plot(x_pos, z_pos)
-        ax.set_title(title)
+        fig.suptitle(title)
         ax.set_xlabel("x")
         ax.set_ylabel("h", rotation=0)
         # plt.show()
@@ -260,7 +261,7 @@ class MonitorState(gym.Wrapper):
         ax.plot(self._time, pitch_rate)
         ax.set_title("pitch rate")
         ax.set_xlabel("t")
-        ax.set_ylabel(r"\dot{p}", rotation=0)
+        ax.set_ylabel(r"$\dot{p}$", rotation=0)
         return fig, ax
 
     def _plot_pitch(self):
