@@ -460,7 +460,7 @@ class SensorList:
 
     def _on_step(self):
         for s in self._sensor_list:
-            s._get_data()
+            s._on_step()
 
     def _reset(self, robot):
         for s in self._sensor_list:
