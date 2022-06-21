@@ -44,11 +44,11 @@ class SensorCollection(CollectionBase):
             rs.JointVelocity,
         ]
         self._ARS_HEIGHT = [
+            rs.JointPosition,
+            rs.JointVelocity,
             rs.Pitch,
             rs.PitchRate,
             rs.LinearVelocity2D,
-            rs.JointPosition,
-            rs.JointVelocity,
             rs.Height,
         ]
         self._dict = {
