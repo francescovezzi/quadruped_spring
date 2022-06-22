@@ -29,6 +29,8 @@ from quadruped_spring.utils import action_filter
 
 # from quadruped_spring.env.wrappers.rest_wrapper import RestWrapper
 # from quadruped_spring.env.wrappers.landing_wrapper import LandingWrapper
+from quadruped_spring.env.wrappers.initial_pose_wrapper import InitialPoseWrapper
+
 
 ACTION_EPS = 0.01
 OBSERVATION_EPS = 0.01
@@ -63,9 +65,9 @@ class QuadrupedGymEnv(gym.Env):
         time_step=0.001,
         action_repeat=10,
         motor_control_mode="PD",
-        task_env="JUMPING_ON_PLACE_HEIGHT",
-        observation_space_mode="DEFAULT",
-        action_space_mode="DEFAULT",
+        task_env="JUMPING_IN_PLACE",
+        observation_space_mode="ARS_HEIGHT",
+        action_space_mode="SYMMETRIC",
         on_rack=False,
         render=False,
         record_video=False,
@@ -73,7 +75,7 @@ class QuadrupedGymEnv(gym.Env):
         enable_springs=False,
         enable_action_interpolation=False,
         enable_action_filter=False,
-        enable_env_randomization=True,
+        enable_env_randomization=False,
         env_randomizer_mode="MASS_RANDOMIZER",
         curriculum_level=0.0,
     ):
@@ -540,6 +542,10 @@ class QuadrupedGymEnv(gym.Env):
             return self._env_randomizer_mode
         else:
             return "noone"
+        
+    def get_ac_interface(self):
+        """Return the action control interface."""
+        return self._ac_interface
 
     def increase_curriculum_level(self, value):
         """increase the curriculum level."""
@@ -568,7 +574,7 @@ def build_env():
         "on_rack": False,
         "motor_control_mode": "PD",
         "action_repeat": 10,
-        "enable_springs": True,
+        "enable_springs": False,
         "add_noise": False,
         "enable_action_interpolation": False,
         "enable_action_filter": True,
@@ -577,11 +583,12 @@ def build_env():
         "action_space_mode": "SYMMETRIC",
         "enable_env_randomization": False,
         "env_randomizer_mode": "SETTLING_RANDOMIZER",
-        "curriculum_level": 1.0,
+        "curriculum_level": 0.0,
     }
     env = QuadrupedGymEnv(**env_config)
 
     env = ObsFlatteningWrapper(env)
+    env = InitialPoseWrapper(env)
     # env = RestWrapper(env)
     # env = LandingWrapper(env)
     return env
@@ -592,6 +599,7 @@ def test_env():
     sim_steps = 500
     action_dim = env.get_action_dim()
     obs = env.reset()
+    print(f'pitch -> {np.rad2deg(env.robot.GetBaseOrientationRollPitchYaw()[1])}')
     for i in range(sim_steps):
         action = np.random.rand(action_dim) * 2 - 1
         # action = np.full(action_dim, 0)
