@@ -30,6 +30,7 @@ from quadruped_spring.utils import action_filter
 # from quadruped_spring.env.wrappers.rest_wrapper import RestWrapper
 # from quadruped_spring.env.wrappers.landing_wrapper import LandingWrapper
 from quadruped_spring.env.wrappers.initial_pose_wrapper import InitialPoseWrapper
+from quadruped_spring.env.wrappers.moe_wrapper import MoEWrapper
 
 
 ACTION_EPS = 0.01
@@ -588,18 +589,19 @@ def build_env():
     env = QuadrupedGymEnv(**env_config)
 
     env = ObsFlatteningWrapper(env)
-    env = InitialPoseWrapper(env)
+    # env = InitialPoseWrapper(env)
     # env = RestWrapper(env)
     # env = LandingWrapper(env)
+    env = MoEWrapper(env, 'logs/MoE_1')
     return env
 
 
 def test_env():
+    
     env = build_env()
     sim_steps = 500
     action_dim = env.get_action_dim()
     obs = env.reset()
-    print(f'pitch -> {np.rad2deg(env.robot.GetBaseOrientationRollPitchYaw()[1])}')
     for i in range(sim_steps):
         action = np.random.rand(action_dim) * 2 - 1
         # action = np.full(action_dim, 0)
