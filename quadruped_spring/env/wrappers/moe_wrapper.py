@@ -13,7 +13,7 @@ MODEL = 'best_model'
 
 
 class MoEWrapper(gym.Wrapper):
-    """Wrapper for changing Initial Robot Pose based on the pitch angle."""
+    """Mixture of Experts ensembling."""
 
     def __init__(self, env, experts_folder):
         super().__init__(env)
@@ -34,9 +34,8 @@ class MoEWrapper(gym.Wrapper):
         for model_folder in glob.glob(os.path.join(models_path, '*')):
             model = self.create_model(model_folder)
             model_list.append(model)
-        print(model_list)
         return model_list
-        
+    
     @staticmethod
     def load_env_kwargs(model_folder):
         args_path = os.path.join(model_folder, f"{ENV}/args.yml")
@@ -71,3 +70,19 @@ class MoEWrapper(gym.Wrapper):
         }
         model = ARS.load(model_path, env, custom_objects=custom_objects)
         return model
+    
+    def get_experts_prediction(self, obs):
+        predictions = [expert.predict(obs, deterministic=True) for expert in self.experts]
+        return predictions
+    
+    @staticmethod
+    def _compute_action_ensemble(actions_pred):
+        w0 = 0.5
+        w1 = 0.5
+        action_ensmeble = actions_pred[0][0] * w0 + actions_pred[1][0] * w1
+        return np.clip(action_ensmeble, -1, 1)
+    
+    def get_action_ensemble(self,obs):
+        actions_pred = self.get_experts_prediction(obs)
+        return self._compute_action_ensemble(actions_pred)
+         

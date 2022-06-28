@@ -571,11 +571,11 @@ class QuadrupedGymEnv(gym.Env):
 
 def build_env():
     env_config = {
-        "render": False,
+        "render": True,
         "on_rack": False,
         "motor_control_mode": "PD",
         "action_repeat": 10,
-        "enable_springs": False,
+        "enable_springs": True,
         "add_noise": False,
         "enable_action_interpolation": False,
         "enable_action_filter": True,
@@ -584,7 +584,7 @@ def build_env():
         "action_space_mode": "SYMMETRIC",
         "enable_env_randomization": False,
         "env_randomizer_mode": "SETTLING_RANDOMIZER",
-        "curriculum_level": 0.0,
+        "curriculum_level": 0.2,
     }
     env = QuadrupedGymEnv(**env_config)
 
@@ -603,9 +603,10 @@ def test_env():
     action_dim = env.get_action_dim()
     obs = env.reset()
     for i in range(sim_steps):
-        action = np.random.rand(action_dim) * 2 - 1
+        # action = np.random.rand(action_dim) * 2 - 1
         # action = np.full(action_dim, 0)
         # action = env.get_settling_action()
+        action = env.get_action_ensemble(obs)
         obs, reward, done, info = env.step(action)
     # env.print_task_info()
     env.close()
