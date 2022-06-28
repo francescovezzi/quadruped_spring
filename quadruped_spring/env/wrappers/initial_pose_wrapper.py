@@ -10,6 +10,7 @@ class InitialPoseWrapper(gym.Wrapper):
     def __init__(self, env, phi_des=20):
         super().__init__(env)
         self.phi_des = np.deg2rad(phi_des)
+        print(f'initial pitch desired -> {phi_des} Degree')
 
     def step(self, action):
         obs, reward, done, infos = self.env.step(action)
