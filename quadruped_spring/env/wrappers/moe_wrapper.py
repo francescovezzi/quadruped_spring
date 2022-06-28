@@ -1,15 +1,15 @@
+import glob
+import os
+
 import gym
-import os, glob
 import numpy as np
 import yaml
-
+from sb3_contrib import ARS
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.vec_env import VecNormalize
-from sb3_contrib import ARS
 
-
-ENV = 'QuadrupedSpring-v0'
-MODEL = 'best_model'
+ENV = "QuadrupedSpring-v0"
+MODEL = "best_model"
 
 
 class MoEWrapper(gym.Wrapper):
@@ -27,15 +27,15 @@ class MoEWrapper(gym.Wrapper):
     def reset(self):
         obs = self.env.reset()
         return obs
-    
+
     def _get_models(self):
-        models_path = os.path.join(self._experts_folder, 'models')
+        models_path = os.path.join(self._experts_folder, "models")
         model_list = []
-        for model_folder in glob.glob(os.path.join(models_path, '*')):
+        for model_folder in glob.glob(os.path.join(models_path, "*")):
             model = self.create_model(model_folder)
             model_list.append(model)
         return model_list
-    
+
     @staticmethod
     def load_env_kwargs(model_folder):
         args_path = os.path.join(model_folder, f"{ENV}/args.yml")
@@ -47,8 +47,8 @@ class MoEWrapper(gym.Wrapper):
                     env_kwargs = loaded_args["env_kwargs"]
             return env_kwargs
         else:
-            raise RuntimeError(f'{args_path} file not found.')
-        
+            raise RuntimeError(f"{args_path} file not found.")
+
     def create_env(self, model_folder):
         stats_path = os.path.join(model_folder, f"{ENV}/vecnormalize.pkl")
         env_kwargs = self.load_env_kwargs(model_folder)
@@ -58,7 +58,7 @@ class MoEWrapper(gym.Wrapper):
         env.training = False  # do not update stats at test time
         env.norm_reward = False  # reward normalization is not needed at test time
         return env
-    
+
     def create_model(self, model_folder):
         model_path = os.path.join(model_folder, MODEL)
         env = self.create_env(model_folder)
@@ -70,20 +70,19 @@ class MoEWrapper(gym.Wrapper):
         }
         model = ARS.load(model_path, env, custom_objects=custom_objects)
         return model
-    
+
     def get_experts_prediction(self, obs):
         norm_obs = lambda model, obs: model.get_vec_normalize_env().normalize_obs(obs)
         predictions = [expert.predict(norm_obs(expert, obs), deterministic=True)[0] for expert in self.experts]
         return predictions
-    
+
     @staticmethod
     def _compute_action_ensemble(actions_pred):
         w0 = 0.0
         w1 = 1.0
         action_ensemble = actions_pred[0] * w0 + actions_pred[1] * w1
         return np.clip(action_ensemble, -1, 1)
-    
+
     def get_action_ensemble(self, obs):
         actions_pred = self.get_experts_prediction(obs)
         return self._compute_action_ensemble(actions_pred)
-         

@@ -25,14 +25,13 @@ from quadruped_spring.env.env_randomizers.env_randomizer_list import EnvRandomiz
 from quadruped_spring.env.sensors.robot_sensors import SensorList
 from quadruped_spring.env.sensors.sensor_collection import SensorCollection
 from quadruped_spring.env.tasks.task_collection import TaskCollection
-from quadruped_spring.env.wrappers.obs_flattening_wrapper import ObsFlatteningWrapper
-from quadruped_spring.utils import action_filter
+from quadruped_spring.env.wrappers.initial_pose_wrapper import InitialPoseWrapper
 
 # from quadruped_spring.env.wrappers.rest_wrapper import RestWrapper
 from quadruped_spring.env.wrappers.landing_wrapper import LandingWrapper
-from quadruped_spring.env.wrappers.initial_pose_wrapper import InitialPoseWrapper
 from quadruped_spring.env.wrappers.moe_wrapper import MoEWrapper
-
+from quadruped_spring.env.wrappers.obs_flattening_wrapper import ObsFlatteningWrapper
+from quadruped_spring.utils import action_filter
 
 ACTION_EPS = 0.01
 OBSERVATION_EPS = 0.01
@@ -544,7 +543,7 @@ class QuadrupedGymEnv(gym.Env):
             return self._env_randomizer_mode
         else:
             return "noone"
-        
+
     def get_ac_interface(self):
         """Return the action control interface."""
         return self._ac_interface
@@ -557,17 +556,17 @@ class QuadrupedGymEnv(gym.Env):
     def print_curriculum_info(self):
         """Print curriculum info."""
         self.task.print_curriculum_info()
-        
+
     def print_info(self):
         """Print environment info."""
-        print('\n*** Environment Info ***')
-        print(f'task environment -> {self.task_env}')
-        print(f'spring enabled -> {self._enable_springs}')
-        print(f'curriculum level -> {self.get_curriculum_level()}')
-        print(f'sensors -> {self._observation_space_mode}')
+        print("\n*** Environment Info ***")
+        print(f"task environment -> {self.task_env}")
+        print(f"spring enabled -> {self._enable_springs}")
+        print(f"curriculum level -> {self.get_curriculum_level()}")
+        print(f"sensors -> {self._observation_space_mode}")
         if self._enable_env_randomization:
-            print(f'env randomizer -> {self._env_randomizer_mode}')
-        print('')
+            print(f"env randomizer -> {self._env_randomizer_mode}")
+        print("")
 
 
 def build_env():
@@ -592,7 +591,7 @@ def build_env():
     env = ObsFlatteningWrapper(env)
     # env = InitialPoseWrapper(env)
     # env = RestWrapper(env)
-    env = MoEWrapper(env, 'logs/MoE_1')
+    env = MoEWrapper(env, "logs/MoE_1")
     env = LandingWrapper(env)
 
     return env

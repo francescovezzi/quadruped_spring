@@ -17,7 +17,6 @@ from quadruped_spring.env.wrappers.rest_wrapper import RestWrapper
 from quadruped_spring.utils.monitor_state import MonitorState
 from quadruped_spring.utils.video_recording import VideoRec
 
-
 SEED = 24
 
 LEARNING_ALGS = {"ars": ARS}
@@ -26,7 +25,7 @@ SUB_FOLDER = "26_06"
 ENV_ID = "QuadrupedSpring-v0"
 ID = "1"
 MODEL = "rl_model_22000000_steps"
-MODEL = 'best_model'
+MODEL = "best_model"
 
 REC_VIDEO = False
 SAVE_PLOTS = False
@@ -44,10 +43,10 @@ def callable_env(env_id, wrappers, kwargs):
         env = env_id(**kwargs)
         env = RestWrapper(env)
         if SAVE_PLOTS:
-            plot_folder = os.path.join(LOG_DIR, 'plots', f"{LEARNING_ALG}_{ENV_ID}_{ID}")
+            plot_folder = os.path.join(LOG_DIR, "plots", f"{LEARNING_ALG}_{ENV_ID}_{ID}")
             env = MonitorState(env, path=plot_folder)
         if REC_VIDEO:
-            video_folder = os.path.join(LOG_DIR, 'videos')
+            video_folder = os.path.join(LOG_DIR, "videos")
             video_name = f"{LEARNING_ALG}_{ENV_ID}_{ID}"
             env = VideoRec(env, video_folder, video_name)
         for wrapper in wrappers:
@@ -62,7 +61,7 @@ def callable_env(env_id, wrappers, kwargs):
 
 
 # define directories
-aux_dir = os.path.join(LOG_DIR, 'models')
+aux_dir = os.path.join(LOG_DIR, "models")
 model_dir = os.path.join(currentdir, aux_dir, LEARNING_ALG, f"{ENV_ID}_{ID}")
 model_file = os.path.join(model_dir, MODEL)
 args_file = os.path.join(model_dir, ENV_ID, "args.yml")

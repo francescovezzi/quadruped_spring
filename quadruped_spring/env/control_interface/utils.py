@@ -28,15 +28,17 @@ def settle_robot_by_pd(env):
     settle = temporary_switch_motor_control_mode(env, "PD")
     settle = settle(aci._settle_robot_by_reference)
     settle(init_angles, 1500)
-    
+
+
 def find_config_from_height(des_height, robot):
     """Return the config such that robot mass center height == des_height"""
     link_length = robot._robot_config._THIGH_LINK_LENGTH
     q_hip = 0
     q_thigh = np.arccos(des_height / (2 * link_length))
-    q_calf = - 2 * q_thigh
+    q_calf = -2 * q_thigh
     config = [q_hip, q_thigh, q_calf] * 4
     return config
+
 
 # def config_des_phi(phi_des, robot):
 #     """Return the config such that the robot has pitch orientation == phi_des"""
@@ -67,8 +69,8 @@ def find_config_from_height(des_height, robot):
 def get_pose_from_phi_des(phi_des, robot):
     """
     Get the pose such that the robot pitch angle is equal to phi_des.
-    Please note that this method works only if the robot starts with the 
-    nominal position. 
+    Please note that this method works only if the robot starts with the
+    nominal position.
     Params:
     - phi_des:  the desired pitch angle.
     - robot:    the robot instance. Usefull to get robot geometric quantities
@@ -77,15 +79,17 @@ def get_pose_from_phi_des(phi_des, robot):
     cartesian_pos_des = compute_des_feet_cartesian_pos(phi_des, robot)
     q_des = inverse_kinematics(cartesian_pos_des, robot)
     return q_des
-    
+
+
 def compute_des_feet_cartesian_pos(phi_des, robot):
     radius = robot._robot_config.X_OFFSET
-    init_feet_pos, _  = robot.ComputeFeetPosAndVel()
+    init_feet_pos, _ = robot.ComputeFeetPosAndVel()
     hip_front_des_pos = radius * np.asarray([np.cos(phi_des), -np.sin(phi_des)])
     hip_rear_des_pos = radius * np.asarray([-np.cos(phi_des), np.sin(phi_des)])
     feet_front_des_pos = [radius - hip_front_des_pos[0], 0, -hip_front_des_pos[1]]
     feet_rear_des_pos = [-radius - hip_rear_des_pos[0], 0, -hip_rear_des_pos[1]]
     return (feet_front_des_pos * 2 + feet_rear_des_pos * 2) + init_feet_pos
+
 
 def inverse_kinematics(cartesian_pos_des, robot):
     q_des = np.zeros(robot._robot_config.NUM_MOTORS)
@@ -93,4 +97,3 @@ def inverse_kinematics(cartesian_pos_des, robot):
         xyz_leg = cartesian_pos_des[3 * i : 3 * (i + 1)]
         q_des[3 * i : 3 * (i + 1)] = robot.ComputeInverseKinematics(i, xyz_leg)
     return q_des
-    

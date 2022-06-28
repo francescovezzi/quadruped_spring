@@ -64,7 +64,7 @@ class JumpingCurriculum(TaskJumping):
 
     def _reset(self, env):
         super()._reset(env)
-        
+
 
 class JumpingForward(TaskJumping):
     """
@@ -142,7 +142,8 @@ class JumpingInPlaceDense(TaskJumping):
         if self._env.robot.GetBasePosition()[2] >= 0.36:
             done = True
         return done
-    
+
+
 class JumpingInPlace(TaskJumping):
     """
     Robot has to perform one single jump in place. It has to fall the closest as possible
@@ -161,16 +162,16 @@ class JumpingInPlace(TaskJumping):
         """Reward for each simulation step."""
         reward = 0
         # if not self._switched_controller:  # Only if the robot is using RL policy
-            # Penalize height base decreasing
-            # height = self._env.robot.GetBasePosition()[2]
-            # if self._init_height - height > 0.02:
-            #     reward -= 0.008
-            # Penalize high frequency torques command
-            # tau_max = 300
-            # delta_tau = self._new_torque - self._old_torque
-            # delta_tau_module = np.sum(delta_tau**2)
-            # if delta_tau_module > tau_max:
-            #     reward -= 0.005 * delta_tau_module / 500
+        # Penalize height base decreasing
+        # height = self._env.robot.GetBasePosition()[2]
+        # if self._init_height - height > 0.02:
+        #     reward -= 0.008
+        # Penalize high frequency torques command
+        # tau_max = 300
+        # delta_tau = self._new_torque - self._old_torque
+        # delta_tau_module = np.sum(delta_tau**2)
+        # if delta_tau_module > tau_max:
+        #     reward -= 0.005 * delta_tau_module / 500
         return reward
 
     def _compute_max_height_task(self):

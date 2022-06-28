@@ -20,7 +20,7 @@ class VideoRec(gym.Wrapper):
         self._old_method = copy.copy(self.unwrapped.step_simulation)
         self.unwrapped.step_simulation = self._step_simulation
         self._path = path
-        self._name = os.path.join(self._path, f'{name}.mp4')
+        self._name = os.path.join(self._path, f"{name}.mp4")
         self._n_episodes = 1
         self._episode_counter = 0
         self._disable_video = False

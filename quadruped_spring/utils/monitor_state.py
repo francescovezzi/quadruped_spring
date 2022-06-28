@@ -148,12 +148,12 @@ class MonitorState(gym.Wrapper):
         ax.set_ylabel("h", rotation=0)
         # length = np.shape(self._time)[0]
         # limit = np.full(length, H_MIN)
-        #ax.plot(self._time, limit, "--")
+        # ax.plot(self._time, limit, "--")
         # box = ax.get_position()
         # ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
         # ax.legend(["h", "h_min"], loc="center left", bbox_to_anchor=(1, 0.5))
         # plt.tight_layout(rect=[0, 0, 0.75, 1])
-        #ax.legend(["h", "h_min"])
+        # ax.legend(["h", "h_min"])
         return fig, ax
 
     def _plot_motor_torques(self):
