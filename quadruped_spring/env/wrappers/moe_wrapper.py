@@ -72,17 +72,18 @@ class MoEWrapper(gym.Wrapper):
         return model
     
     def get_experts_prediction(self, obs):
-        predictions = [expert.predict(obs, deterministic=True) for expert in self.experts]
+        norm_obs = lambda model, obs: model.get_vec_normalize_env().normalize_obs(obs)
+        predictions = [expert.predict(norm_obs(expert, obs), deterministic=True)[0] for expert in self.experts]
         return predictions
     
     @staticmethod
     def _compute_action_ensemble(actions_pred):
-        w0 = 0.5
-        w1 = 0.5
-        action_ensmeble = actions_pred[0][0] * w0 + actions_pred[1][0] * w1
-        return np.clip(action_ensmeble, -1, 1)
+        w0 = 0.0
+        w1 = 1.0
+        action_ensemble = actions_pred[0] * w0 + actions_pred[1] * w1
+        return np.clip(action_ensemble, -1, 1)
     
-    def get_action_ensemble(self,obs):
+    def get_action_ensemble(self, obs):
         actions_pred = self.get_experts_prediction(obs)
         return self._compute_action_ensemble(actions_pred)
          
