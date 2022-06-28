@@ -64,9 +64,7 @@ class JumpingCurriculum(TaskJumping):
 
     def _reset(self, env):
         super()._reset(env)
-        landing_pose = self._env._robot_config.INIT_MOTOR_ANGLES
-        self._env._ac_interface.set_landing_pose(landing_pose)
-
+        
 
 class JumpingForward(TaskJumping):
     """
@@ -213,8 +211,6 @@ class JumpingInPlace(TaskJumping):
 
     def _reset(self, env):
         super()._reset(env)
-        landing_pose = self._env._robot_config.INIT_MOTOR_ANGLES
-        self._env._ac_interface.set_landing_pose(landing_pose)
 
 
 class NoTask(TaskBase):
