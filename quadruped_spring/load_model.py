@@ -22,12 +22,14 @@ SEED = 24
 
 LEARNING_ALGS = {"ars": ARS}
 LEARNING_ALG = "ars"
-SUB_FOLDER = "15_06"
+SUB_FOLDER = "26_06"
 ENV_ID = "QuadrupedSpring-v0"
-ID = "2"
+ID = "1"
+MODEL = "rl_model_22000000_steps"
+MODEL = 'best_model'
 
 REC_VIDEO = False
-SAVE_PLOTS = True
+SAVE_PLOTS = False
 RENDER = False
 EVAL_EPISODES = 1
 ENABLE_ENV_RANDOMIZATION = False
@@ -62,7 +64,7 @@ def callable_env(env_id, wrappers, kwargs):
 # define directories
 aux_dir = os.path.join(LOG_DIR, 'models')
 model_dir = os.path.join(currentdir, aux_dir, LEARNING_ALG, f"{ENV_ID}_{ID}")
-model_file = os.path.join(model_dir, "rl_model_22000000_steps")
+model_file = os.path.join(model_dir, MODEL)
 args_file = os.path.join(model_dir, ENV_ID, "args.yml")
 stats_file = os.path.join(model_dir, ENV_ID, "vecnormalize.pkl")
 
@@ -95,7 +97,6 @@ custom_objects = {
 }
 model = LEARNING_ALGS[LEARNING_ALG].load(model_file, env, custom_objects=custom_objects)
 print(f"\nLoaded model: {model_file}\n")
-
 set_random_seed(SEED)
 obs = env.reset()
 n_episodes = EVAL_EPISODES
