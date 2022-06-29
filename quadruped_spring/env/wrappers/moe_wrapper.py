@@ -78,9 +78,10 @@ class MoEWrapper(gym.Wrapper):
 
     @staticmethod
     def _compute_action_ensemble(actions_pred):
-        w0 = 0.0
-        w1 = 1.0
-        action_ensemble = actions_pred[0] * w0 + actions_pred[1] * w1
+        w0 = 0.5
+        w1 = 0.0
+        w2 = 0.5
+        action_ensemble = actions_pred[0] * w0 + actions_pred[1] * w1 + actions_pred[2] * w2
         return np.clip(action_ensemble, -1, 1)
 
     def get_action_ensemble(self, obs):

@@ -165,7 +165,6 @@ class QuadrupedGymEnv(gym.Env):
             self._env_randomizers._init(self)
 
         self.reset()
-        self.print_info()
 
     ######################################################################################
     # RL Observation and Action spaces
@@ -316,6 +315,7 @@ class QuadrupedGymEnv(gym.Env):
         if self._is_record_video:
             self.recordVideoHelper()
 
+        self.print_info()
         return self.get_observation()
 
     def reset_pybullet_simulation(self):
@@ -557,7 +557,7 @@ class QuadrupedGymEnv(gym.Env):
         """Print curriculum info."""
         self.task.print_curriculum_info()
 
-    def print_info(self):
+    def print_info_(self):
         """Print environment info."""
         print("\n*** Environment Info ***")
         print(f"task environment -> {self.task_env}")
@@ -566,16 +566,18 @@ class QuadrupedGymEnv(gym.Env):
         print(f"sensors -> {self._observation_space_mode}")
         if self._enable_env_randomization:
             print(f"env randomizer -> {self._env_randomizer_mode}")
-        print("")
-
+    
+    def print_info(self):
+        self.print_info_()
+        print('')
 
 def build_env():
     env_config = {
-        "render": True,
+        "render": False,
         "on_rack": False,
         "motor_control_mode": "PD",
         "action_repeat": 10,
-        "enable_springs": True,
+        "enable_springs": False,
         "add_noise": False,
         "enable_action_interpolation": False,
         "enable_action_filter": True,
@@ -588,10 +590,10 @@ def build_env():
     }
     env = QuadrupedGymEnv(**env_config)
 
-    env = ObsFlatteningWrapper(env)
-    # env = InitialPoseWrapper(env)
+    env = InitialPoseWrapper(env, phi_des=0.0)
     # env = RestWrapper(env)
-    env = MoEWrapper(env, "logs/MoE_1")
+    env = ObsFlatteningWrapper(env)
+    env = MoEWrapper(env, "logs/MoE_pitch_28_06")
     env = LandingWrapper(env)
 
     return env
