@@ -60,6 +60,7 @@ class MonitorState(gym.Wrapper):
         self._feet_normal_forces = []
         self._pitch = []
         self._pitch_rate = []
+        self._actions = []
 
     def _compute_energy_spring(self, q):
         if self.quadruped._enable_springs:
@@ -318,6 +319,7 @@ class MonitorState(gym.Wrapper):
     def step(self, action):
 
         obs, reward, done, infos = self.env.step(action)
+        self._actions.append(action)
 
         return obs, reward, done, infos
 
