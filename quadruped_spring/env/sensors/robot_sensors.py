@@ -192,6 +192,63 @@ class LinearVelocity(Sensor):
         self._get_data()
         self._sample_noise()
 
+class HeightVelocity(Sensor):
+    """Base height linear velocity."""
+
+    def __init__(self):
+        super().__init__()
+        self._name = "Base Height Velocity"
+
+    def _update_sensor_info(self):
+        return super()._update_sensor_info(
+            high=self._robot_config.VEL_LIN_HIGH[2],
+            low=self._robot_config.VEL_LIN_LOW[2],
+            noise_std=self._robot_config.VEL_LIN_NOISE[2],
+        )
+
+    def _get_data(self):
+        height_vel = self._robot.GetBaseLinearVelocity()[2]
+        self._data = height_vel
+
+    def _reset_sensor(self):
+        self._get_data()
+        self._sample_noise()
+
+    def _on_step(self):
+        self._get_data()
+        self._sample_noise()
+        
+class HeightGround(Sensor):
+    """Height base posiiton only if robot touches the ground."""
+        
+    def __init__(self):
+        super().__init__()
+        self._name = "Height Ground"
+
+    def _update_sensor_info(self):
+        return super()._update_sensor_info(
+            high=self._robot_config.HEIGHT_HIGH,
+            low=self._robot_config.HEIGHT_LOW,
+            noise_std=self._robot_config.HEIGHT_NOISE,
+        )
+
+    def _get_data(self):
+        height = self._robot.GetBasePosition()[2]
+        self._old_data = self._data
+        if self._robot._is_flying():
+            self._data = self._old_data
+        else:
+            self._data = height
+
+    def _reset_sensor(self):
+        self._old_data = self._robot.GetBasePosition()[2]
+        self._get_data()
+        self._sample_noise()
+
+    def _on_step(self):
+        self._get_data()
+        self._sample_noise()
+
 
 class AngularVelocity(Sensor):
     """Base angular velocity."""

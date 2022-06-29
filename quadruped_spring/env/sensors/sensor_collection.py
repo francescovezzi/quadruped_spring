@@ -51,6 +51,13 @@ class SensorCollection(CollectionBase):
             rs.LinearVelocity2D,
             rs.Height,
         ]
+        self._ARS_CONTACT = [
+            rs.JointPosition,
+            rs.JointVelocity,
+            rs.Pitch,
+            rs.HeightGround,
+            rs.BooleanContact,
+        ]
         self._dict = {
             "DEFAULT": self._DEFAULT,
             "ENCODER": self._ENCODER,
@@ -61,5 +68,6 @@ class SensorCollection(CollectionBase):
             "CUSTOM_2D": self._CUSTOM_2D,
             "ARS": self._ARS,
             "ARS_HEIGHT": self._ARS_HEIGHT,
+            "ARS_CONTACT": self._ARS_CONTACT,
         }
         self._element_type = "sensor package"
