@@ -29,7 +29,7 @@ class MoEWrapper(gym.Wrapper):
         return obs
 
     def _get_models(self):
-        models_path = os.path.join(self._experts_folder, "models")
+        models_path = os.path.join(self._experts_folder, "models/ars")
         model_list = []
         for model_folder in glob.glob(os.path.join(models_path, "*")):
             model = self.create_model(model_folder)
