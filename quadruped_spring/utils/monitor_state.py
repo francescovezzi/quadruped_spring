@@ -30,8 +30,7 @@ class MonitorState(gym.Wrapper):
         self._step_counter = 0
         self._torque_limits = self.quadruped._robot_config.TORQUE_LIMITS
         self._velocity_limits = self.quadruped._robot_config.VELOCITY_LIMITS
-        self._n_episodes = 1
-        self._episode_counter = 0
+        self._start_data_collection = False
 
     # def _init_storage(self):
     #     NUM_MOTORS = self.env._robot_config.NUM_MOTORS
@@ -94,6 +93,7 @@ class MonitorState(gym.Wrapper):
         self._base_or = np.asarray(self._base_or)
         self._feet_normal_forces = np.asarray(self._feet_normal_forces)
         self._pitch_rate = np.asarray(self._pitch_rate)
+        self._actions = np.asarray(self._actions)
 
     def collect_data(self):
         self._transform_to_array()
@@ -108,6 +108,7 @@ class MonitorState(gym.Wrapper):
             "base_orientation",
             "feet_forces",
             "pitch_rate",
+            "actions"
         ]
         ret_values = [
             self._time,
@@ -120,6 +121,7 @@ class MonitorState(gym.Wrapper):
             self._base_or,
             self._feet_normal_forces,
             self._pitch_rate,
+            self._actions,
         ]
         ret = dict(zip(ret_keys, ret_values))
         self._init_storage()
@@ -273,7 +275,25 @@ class MonitorState(gym.Wrapper):
         ax.set_xlabel("t")
         ax.set_ylabel(r"p", rotation=0)
         return fig, ax
+    
+    def _plot_actions(self):
+        n_rows = 2
+        n_cols = 3
+        fig, axs = plt.subplots(nrows=n_rows, ncols=n_cols, sharex=True, sharey=True)
+        y_labels = [[r'hip front', r'thigh front', r'calf front'],
+                    [r'hip rear', r'thigh rear', r'calf rear']
+                    ]
+        fig.suptitle(r'actions')
+        for i in range(n_rows):
+            for j in range(n_cols):
+                ax = axs[i][j]
+                actions = self._actions[:, i * n_cols + j]
+                ax.plot(list(range(np.shape(actions)[0])), actions)
+                ax.set_xlabel(r"time steps")
+                ax.set_ylabel(y_labels[i][j])
 
+        return fig, axs
+    
     def _generate_figs(self):
         self._transform_to_array()
         fig_height, _ = self._plot_height()
@@ -285,6 +305,7 @@ class MonitorState(gym.Wrapper):
         fig_pitch, _ = self._plot_pitch()
         fig_pitch_rate, _ = self._plot_pitch_rate()
         fig_config, _ = self._plot_config()
+        fig_actions, _ = self._plot_actions()
 
         figs = [
             fig_height,
@@ -296,6 +317,7 @@ class MonitorState(gym.Wrapper):
             fig_jump,
             fig_pitch,
             fig_pitch_rate,
+            fig_actions,
         ]
         names = [
             "height",
@@ -307,6 +329,7 @@ class MonitorState(gym.Wrapper):
             "forward_jumping",
             "pitch",
             "pitch_rate",
+            "actions",
         ]
         return dict(zip(figs, names))
 
@@ -324,17 +347,15 @@ class MonitorState(gym.Wrapper):
         return obs, reward, done, infos
 
     def reset(self):
-        self._episode_counter += 1
-        if self._episode_counter <= self._n_episodes:
+        obs = self.env.reset()
+        if not self._start_data_collection:
             self._init_storage()
-            obs = self.env.reset()
-        else:
-            obs = self.env.get_observation()
+        self._start_data_collection = True
         return obs
 
     def _step_simulation(self, increase_sim_counter=True):
         self._old_method(increase_sim_counter)
         self._step_counter += 1
 
-        if self._episode_counter <= self._n_episodes and self._step_counter % self._paddle == 0:
+        if self._start_data_collection and self._step_counter % self._paddle == 0:
             self._get_data()
