@@ -192,6 +192,7 @@ class LinearVelocity(Sensor):
         self._get_data()
         self._sample_noise()
 
+
 class HeightVelocity(Sensor):
     """Base height linear velocity."""
 
@@ -217,10 +218,11 @@ class HeightVelocity(Sensor):
     def _on_step(self):
         self._get_data()
         self._sample_noise()
-        
+
+
 class HeightGround(Sensor):
     """Height base posiiton only if robot touches the ground."""
-        
+
     def __init__(self):
         super().__init__()
         self._name = "Height Ground"

@@ -214,7 +214,6 @@ class JumpingInPlace(TaskJumping):
         super()._reset(env)
 
 
-
 class MultipleJumpingInPlace(TaskJumping):
     """
     Robot has to perform one single jump in place. It has to fall the closest as possible
