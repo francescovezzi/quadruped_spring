@@ -214,6 +214,65 @@ class JumpingInPlace(TaskJumping):
         super()._reset(env)
 
 
+
+class MultipleJumpingInPlace(TaskJumping):
+    """
+    Robot has to perform one single jump in place. It has to fall the closest as possible
+    to the place it landed. Sparse reward based on maximizing the absolute reached height.
+    """
+
+    def __init__(self):
+        super().__init__()
+        self._max_height_task = 0.5
+
+    def print_curriculum_info(self):
+        super().print_curriculum_info()
+        print(f"-- max height set to {self._max_height_task:.3f} --")
+
+    def _reward(self):
+        """Reward for each simulation step."""
+        reward = 0
+        return reward
+
+    def _compute_max_height_task(self):
+        """Compute the maximum robot base height desired for the task."""
+        curr_level = self.get_curriculum_level()
+        return self._height_min * (1 - curr_level) + self._height_max * curr_level
+
+    def _reward_end_episode(self):
+        """Compute bonus and malus to add to reward at the end of the episode"""
+        reward = 0
+
+        # Task reward -> Height
+        max_height = self._max_height_task
+        if self._relative_max_height > max_height:
+            max_height_normalized = 1.0
+        else:
+            max_height_normalized = self._relative_max_height / max_height
+        reward += 0.7 * max_height_normalized
+
+        # Orientation -> Maintain the initial orientation if you can !
+        reward += max_height_normalized * 0.3 * np.exp(-self._max_pitch**2 / 0.15**2)  # orientation
+
+        # Position -> jump in place !
+        reward += max_height_normalized * 0.05 * np.exp(-self._max_forward_distance**2 / 0.05)
+
+        # Velocity -> velocity direction close to [0,0,1]
+        # reward += max_height_normalized * 0.01 * np.exp(-self._max_vel_err**2 / 0.1**2)
+
+        if not self._terminated():
+            # Alive bonus proportional to the risk taken
+            reward += 0.1 * max_height_normalized
+        else:
+            # Malus for crashing
+            # Optionally: no reward in case of crash
+            reward -= 0.08 * (1 + 0.1 * max_height_normalized)
+        return reward
+
+    def _reset(self, env):
+        super()._reset(env)
+
+
 class NoTask(TaskBase):
     """No tasks is required to be performed. Useful for using TORQUE action interface."""
 
