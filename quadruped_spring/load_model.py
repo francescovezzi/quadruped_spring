@@ -16,19 +16,20 @@ from env.quadruped_gym_env import QuadrupedGymEnv
 from quadruped_spring.env.wrappers.rest_wrapper import RestWrapper
 from quadruped_spring.utils.monitor_state import MonitorState
 from quadruped_spring.utils.video_recording import VideoRec
+from quadruped_spring.env.wrappers.obs_flattening_wrapper import ObsFlatteningWrapper
 
 SEED = 24
 
 LEARNING_ALGS = {"ars": ARS}
 LEARNING_ALG = "ars"
-SUB_FOLDER = "26_06"
+SUB_FOLDER = "MoE_pitch_28_06"
 ENV_ID = "QuadrupedSpring-v0"
 ID = "1"
 MODEL = "rl_model_22000000_steps"
 MODEL = "best_model"
 
 REC_VIDEO = False
-SAVE_PLOTS = False
+SAVE_PLOTS = True
 RENDER = False
 EVAL_EPISODES = 1
 ENABLE_ENV_RANDOMIZATION = False
@@ -42,19 +43,27 @@ def callable_env(env_id, wrappers, kwargs):
     def aux():
         env = env_id(**kwargs)
         env = RestWrapper(env)
-        if SAVE_PLOTS:
-            plot_folder = os.path.join(LOG_DIR, "plots", f"{LEARNING_ALG}_{ENV_ID}_{ID}")
-            env = MonitorState(env, path=plot_folder)
         if REC_VIDEO:
             video_folder = os.path.join(LOG_DIR, "videos")
             video_name = f"{LEARNING_ALG}_{ENV_ID}_{ID}"
             env = VideoRec(env, video_folder, video_name)
         for wrapper in wrappers:
+            is_dict = False
+            if isinstance(wrapper, dict):
+                wrap_kwargs = list(wrapper.values())[0]
+                wrapper = list(wrapper.keys())[0]
+                is_dict = True
             module = ".".join(wrapper.split(".")[:-1])
             class_name = wrapper.split(".")[-1]
             module = import_module(module)
             wrap = getattr(module, class_name)
-            env = wrap(env)
+            if is_dict:
+                env = wrap(env, **wrap_kwargs)
+            else:
+                env = wrap(env)
+            if SAVE_PLOTS:
+                plot_folder = os.path.join(LOG_DIR, "plots", f"{LEARNING_ALG}_{ENV_ID}_{ID}")
+                env = MonitorState(env, path=plot_folder)
         return env
 
     return aux
