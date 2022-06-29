@@ -108,7 +108,7 @@ class MonitorState(gym.Wrapper):
             "base_orientation",
             "feet_forces",
             "pitch_rate",
-            "actions"
+            "actions",
         ]
         ret_values = [
             self._time,
@@ -275,15 +275,13 @@ class MonitorState(gym.Wrapper):
         ax.set_xlabel("t")
         ax.set_ylabel(r"p", rotation=0)
         return fig, ax
-    
+
     def _plot_actions(self):
         n_rows = 2
         n_cols = 3
         fig, axs = plt.subplots(nrows=n_rows, ncols=n_cols, sharex=True, sharey=True)
-        y_labels = [[r'hip front', r'thigh front', r'calf front'],
-                    [r'hip rear', r'thigh rear', r'calf rear']
-                    ]
-        fig.suptitle(r'actions')
+        y_labels = [[r"hip front", r"thigh front", r"calf front"], [r"hip rear", r"thigh rear", r"calf rear"]]
+        fig.suptitle(r"actions")
         for i in range(n_rows):
             for j in range(n_cols):
                 ax = axs[i][j]
@@ -293,7 +291,7 @@ class MonitorState(gym.Wrapper):
                 ax.set_ylabel(y_labels[i][j])
 
         return fig, axs
-    
+
     def _generate_figs(self):
         self._transform_to_array()
         fig_height, _ = self._plot_height()

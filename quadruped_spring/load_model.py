@@ -13,10 +13,10 @@ from stable_baselines3.common.utils import set_random_seed
 from stable_baselines3.common.vec_env import VecNormalize
 
 from env.quadruped_gym_env import QuadrupedGymEnv
+from quadruped_spring.env.wrappers.obs_flattening_wrapper import ObsFlatteningWrapper
 from quadruped_spring.env.wrappers.rest_wrapper import RestWrapper
 from quadruped_spring.utils.monitor_state import MonitorState
 from quadruped_spring.utils.video_recording import VideoRec
-from quadruped_spring.env.wrappers.obs_flattening_wrapper import ObsFlatteningWrapper
 
 SEED = 24
 

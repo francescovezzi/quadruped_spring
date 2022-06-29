@@ -566,10 +566,11 @@ class QuadrupedGymEnv(gym.Env):
         print(f"sensors -> {self._observation_space_mode}")
         if self._enable_env_randomization:
             print(f"env randomizer -> {self._env_randomizer_mode}")
-    
+
     def print_info(self):
         self.print_info_()
-        print('')
+        print("")
+
 
 def build_env():
     env_config = {

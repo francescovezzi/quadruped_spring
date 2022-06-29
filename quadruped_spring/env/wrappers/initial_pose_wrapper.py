@@ -1,6 +1,7 @@
+import copy
+
 import gym
 import numpy as np
-import copy
 
 from quadruped_spring.env.control_interface.utils import get_pose_from_phi_des
 
@@ -17,7 +18,7 @@ class InitialPoseWrapper(gym.Wrapper):
 
     def print_info_(self):
         self._old_print_info()
-        print(f'initial pitch desired -> {self._phi_des} Degree')
+        print(f"initial pitch desired -> {self._phi_des} Degree")
 
     def step(self, action):
         obs, reward, done, infos = self.env.step(action)
