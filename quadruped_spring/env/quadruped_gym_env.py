@@ -477,7 +477,8 @@ class QuadrupedGymEnv(gym.Env):
         return self._ac_interface.get_action_space_dim()
 
     def get_observation(self):
-        return self._robot_sensors.get_noisy_obs()
+        # return self._robot_sensors.get_noisy_obs()
+        return self._robot_sensors.get_obs()
 
     def get_sim_time(self):
         """Get current simulation time."""
@@ -574,7 +575,7 @@ class QuadrupedGymEnv(gym.Env):
 
 def build_env():
     env_config = {
-        "render": True,
+        "render": False,
         "on_rack": False,
         "motor_control_mode": "PD",
         "action_repeat": 10,
@@ -582,8 +583,8 @@ def build_env():
         "add_noise": False,
         "enable_action_interpolation": False,
         "enable_action_filter": True,
-        "task_env": "JUMPING_IN_PLACE",
-        "observation_space_mode": "ARS_HEIGHT",
+        "task_env": "MULTIPLE_JUMPING_IN_PLACE",
+        "observation_space_mode": "ARS_CONTACT",
         "action_space_mode": "SYMMETRIC",
         "enable_env_randomization": False,
         "env_randomizer_mode": "SETTLING_RANDOMIZER",
@@ -593,8 +594,8 @@ def build_env():
 
     env = InitialPoseWrapper(env, phi_des=0.0)
     # env = RestWrapper(env)
-    env = ObsFlatteningWrapper(env)
-    env = MoEWrapper(env, "logs/MoE_pitch_28_06")
+    # env = ObsFlatteningWrapper(env)
+    # env = MoEWrapper(env, "logs/MoE_pitch_28_06")
     env = LandingWrapper(env)
 
     return env
@@ -606,12 +607,11 @@ def test_env():
     sim_steps = 500
     action_dim = env.get_action_dim()
     obs = env.reset()
-    action = env.get_action_ensemble(obs)
     for i in range(sim_steps):
-        # action = np.random.rand(action_dim) * 2 - 1
+        action = np.random.rand(action_dim) * 2 - 1
         # action = np.full(action_dim, 0)
         # action = env.get_settling_action()
-        action = env.get_action_ensemble(obs)
+        # action = env.get_action_ensemble(obs)
         obs, reward, done, info = env.step(action)
     # env.print_task_info()
     env.close()
