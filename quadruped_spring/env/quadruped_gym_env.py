@@ -165,6 +165,7 @@ class QuadrupedGymEnv(gym.Env):
             self._env_randomizers._init(self)
 
         self.reset()
+        self.print_info()
 
     ######################################################################################
     # RL Observation and Action spaces
@@ -315,7 +316,6 @@ class QuadrupedGymEnv(gym.Env):
         if self._is_record_video:
             self.recordVideoHelper()
 
-        self.print_info()
         return self.get_observation()
 
     def reset_pybullet_simulation(self):
@@ -558,7 +558,7 @@ class QuadrupedGymEnv(gym.Env):
         """Print curriculum info."""
         self.task.print_curriculum_info()
 
-    def print_info_(self):
+    def print_info(self):
         """Print environment info."""
         print("\n*** Environment Info ***")
         print(f"task environment -> {self.task_env}")
@@ -567,10 +567,7 @@ class QuadrupedGymEnv(gym.Env):
         print(f"sensors -> {self._observation_space_mode}")
         if self._enable_env_randomization:
             print(f"env randomizer -> {self._env_randomizer_mode}")
-
-    def print_info(self):
-        self.print_info_()
-        print("")
+        print('')
 
 
 def build_env():
