@@ -138,7 +138,8 @@ class QuadrupedGymEnv(gym.Env):
         self._settling_steps = 1500
 
         self._build_action_command_interface(motor_control_mode, action_space_mode)
-        self.setupActionSpace()
+        self._action_dim = self.get_action_dim()
+        self.setupActionSpace(self._action_dim)
 
         self._observation_space_mode = observation_space_mode
         self._robot_sensors = SensorList(SensorCollection().get_el(self._observation_space_mode))
@@ -189,12 +190,11 @@ class QuadrupedGymEnv(gym.Env):
         self._motor_control_mode = motor_control_mode
         self._action_space_mode = action_space_mode
 
-    def setupActionSpace(self):
+    def setupActionSpace(self, action_dim):
         """Set up action space for RL."""
-        self._action_dim = self.get_action_dim()
-        action_high = np.array([1] * self._action_dim)
+        action_high = np.array([1] * action_dim)
         self.action_space = spaces.Box(-action_high, action_high, dtype=np.float32)
-        self._last_action = np.zeros(self._action_dim)
+        self._last_action = np.zeros(action_dim)
 
     ######################################################################################
     # Step simulation, map policy network actions to joint commands, etc.
@@ -576,7 +576,7 @@ class QuadrupedGymEnv(gym.Env):
 
 def build_env():
     env_config = {
-        "render": True,
+        "render": False,
         "on_rack": False,
         "motor_control_mode": "PD",
         "action_repeat": 10,
@@ -589,14 +589,14 @@ def build_env():
         "action_space_mode": "SYMMETRIC",
         "enable_env_randomization": False,
         "env_randomizer_mode": "SETTLING_RANDOMIZER",
-        "curriculum_level": 0.2,
+        "curriculum_level": 0.0,
     }
     env = QuadrupedGymEnv(**env_config)
 
     # env = InitialPoseWrapper(env, phi_des=0.0)
     # env = RestWrapper(env)
-    env = ObsFlatteningWrapper(env)
     env = MoEWrapper(env, "logs/MoE_jump_26_06")
+    env = ObsFlatteningWrapper(env)
     env = LandingWrapper(env)
 
     return env
@@ -604,17 +604,18 @@ def build_env():
 
 def test_env():
     env = build_env()
-    env.print_curriculum_info()
-    sim_steps = 500
-    action_dim = env.get_action_dim()
+    # env.print_curriculum_info()
+    sim_steps = 1500
     obs = env.reset()
+    print(env.robot.GetMotorAngles())
     for i in range(sim_steps):
         # action = np.random.rand(action_dim) * 2 - 1
         # action = np.full(action_dim, 0)
         # action = env.get_settling_action()
-        action = env.get_action_ensemble()
-        # action = env.gget_action_ensemble(obs)
+        action = [1, 0]
         obs, reward, done, info = env.step(action)
+        if done:
+            print(env.robot.GetMotorAngles())
     env.close()
     print("end")
 
