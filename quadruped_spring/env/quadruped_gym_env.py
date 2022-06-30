@@ -525,6 +525,10 @@ class QuadrupedGymEnv(gym.Env):
     def get_last_action(self):
         """Get the last action applied."""
         return self._last_action
+    
+    def get_observation_space_mode(self):
+        """Get the observation space mode."""
+        return self._observation_space_mode
 
     def print_task_info(self):
         """Print some info about the task performed."""
