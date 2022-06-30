@@ -1,9 +1,8 @@
 import gym
-
-from quadruped_spring.utils.timer import Timer
-from quadruped_spring.env.wrappers.moe_wrapper import MoEWrapper
-
 from stable_baselines3.common.env_util import is_wrapped
+
+from quadruped_spring.env.wrappers.moe_wrapper import MoEWrapper
+from quadruped_spring.utils.timer import Timer
 
 
 class LandingWrapper(gym.Wrapper):
@@ -73,7 +72,7 @@ class LandingWrapper(gym.Wrapper):
             _, reward, done, infos = self.take_off_phase(action)
             if not done:
                 _, reward, done, infos = self.landing_phase()
-        
+
         if done and self.is_moe_wrapped:
             self.set_bypass_experts(False)
 

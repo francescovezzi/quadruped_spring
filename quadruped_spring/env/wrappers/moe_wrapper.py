@@ -1,10 +1,10 @@
 import glob
 import os
-from cv2 import exp
 
 import gym
 import numpy as np
 import yaml
+from cv2 import exp
 from sb3_contrib import ARS
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.vec_env import VecNormalize
@@ -26,10 +26,10 @@ class MoEWrapper(gym.Wrapper):
         self.experts = self._get_models()
         self.change_action_space()
         self.bypass_experts = False
-        
+
     def set_bypass_experts(self, boolean):
         self.bypass_experts = boolean
-        
+
     def change_action_space(self):
         n = len(self.experts)
         self.env.setupActionSpace(n)
