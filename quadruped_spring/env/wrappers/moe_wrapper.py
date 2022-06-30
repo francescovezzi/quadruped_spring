@@ -1,5 +1,6 @@
 import glob
 import os
+from cv2 import exp
 
 import gym
 import numpy as np
@@ -23,9 +24,20 @@ class MoEWrapper(gym.Wrapper):
         super().__init__(env)
         self._experts_folder = experts_folder
         self.experts = self._get_models()
+        self.change_action_space()
+        self.bypass_experts = False
+        
+    def set_bypass_experts(self, boolean):
+        self.bypass_experts = boolean
+        
+    def change_action_space(self):
+        n = len(self.experts)
+        self.env.setupActionSpace(n)
 
     def step(self, action):
-        obs, reward, done, infos = self.env.step(action)
+        action_ensemble = self.get_action_ensemble(weights=action)
+        env_action = action if self.bypass_experts else action_ensemble
+        obs, reward, done, infos = self.env.step(env_action)
         self.step_expert_sensors()
 
         return obs, reward, done, infos
@@ -33,6 +45,7 @@ class MoEWrapper(gym.Wrapper):
     def reset(self):
         obs = self.env.reset()
         self._reset_expert_sensors()
+        self.bypass_experts = False
         return obs
 
     def _reset_expert_sensors(self):
@@ -105,13 +118,12 @@ class MoEWrapper(gym.Wrapper):
         return predictions
 
     @staticmethod
-    def _compute_action_ensemble(actions_pred):
-        w0 = 1.0
-        w1 = 0.0
-        w2 = 0.0
-        action_ensemble = actions_pred[0] * w0 + actions_pred[1] * w1  # + actions_pred[2] * w2
+    def _compute_action_ensemble(actions_pred, weights):
+        actions_pred = np.asarray(actions_pred)
+        weights = np.asarray(weights)
+        action_ensemble = np.sum([action * w for action, w in zip(actions_pred, weights)], axis=0)
         return np.clip(action_ensemble, -1, 1)
 
-    def get_action_ensemble(self):
+    def get_action_ensemble(self, weights):
         actions_pred = self.get_experts_prediction()
-        return self._compute_action_ensemble(actions_pred)
+        return self._compute_action_ensemble(actions_pred, weights)

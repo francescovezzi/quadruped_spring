@@ -1,6 +1,9 @@
 import gym
 
 from quadruped_spring.utils.timer import Timer
+from quadruped_spring.env.wrappers.moe_wrapper import MoEWrapper
+
+from stable_baselines3.common.env_util import is_wrapped
 
 
 class LandingWrapper(gym.Wrapper):
@@ -15,6 +18,7 @@ class LandingWrapper(gym.Wrapper):
         self._robot_config = self.env.get_robot_config()
         self._landing_action = self.env.get_landing_action()
         self.timer_jumping = Timer(dt=self.env.get_env_time_step())
+        self.is_moe_wrapped = is_wrapped(self, MoEWrapper)
 
     def temporary_switch_motor_control_gain(foo):
         def wrapper(self, *args, **kwargs):
@@ -63,18 +67,20 @@ class LandingWrapper(gym.Wrapper):
         obs, reward, done, infos = self.env.step(action)
 
         if self.env.task.is_switched_controller() and not done:
+            if self.is_moe_wrapped:
+                self.set_bypass_experts(True)
+                action = self.env.get_last_action()
             _, reward, done, infos = self.take_off_phase(action)
             if not done:
                 _, reward, done, infos = self.landing_phase()
+        
+        if done and self.is_moe_wrapped:
+            self.set_bypass_experts(False)
 
         return obs, reward, done, infos
 
-    def render(self, mode="rgb_array", **kwargs):
-        return self.env.render(mode, **kwargs)
-
     def reset(self):
         obs = self.env.reset()
+        if self.is_moe_wrapped:
+            self.set_bypass_experts(False)
         return obs
-
-    def close(self):
-        self.env.close()
