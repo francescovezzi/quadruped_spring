@@ -525,7 +525,7 @@ class QuadrupedGymEnv(gym.Env):
     def get_last_action(self):
         """Get the last action applied."""
         return self._last_action
-    
+
     def get_observation_space_mode(self):
         """Get the observation space mode."""
         return self._observation_space_mode
@@ -571,7 +571,7 @@ class QuadrupedGymEnv(gym.Env):
         print(f"sensors -> {self._observation_space_mode}")
         if self._enable_env_randomization:
             print(f"env randomizer -> {self._env_randomizer_mode}")
-        print('')
+        print("")
 
 
 def build_env():
