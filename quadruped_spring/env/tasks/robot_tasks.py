@@ -222,7 +222,7 @@ class MultipleJumpingInPlace(TaskJumping):
 
     def __init__(self):
         super().__init__()
-        self._max_height_task = 0.5
+        self._max_height_task = 0.3
 
     def print_curriculum_info(self):
         super().print_curriculum_info()
@@ -248,13 +248,13 @@ class MultipleJumpingInPlace(TaskJumping):
             max_height_normalized = 1.0
         else:
             max_height_normalized = self._relative_max_height / max_height
-        reward += 0.7 * max_height_normalized
+        reward += 0.3 * max_height_normalized
 
         # Orientation -> Maintain the initial orientation if you can !
-        reward += max_height_normalized * 0.3 * np.exp(-self._max_pitch**2 / 0.15**2)  # orientation
+        reward += max_height_normalized * 0.7 * np.exp(-self._max_pitch**2 / 0.15**2)  # orientation
 
         # Position -> jump in place !
-        reward += max_height_normalized * 0.05 * np.exp(-self._max_forward_distance**2 / 0.05)
+        reward += max_height_normalized * 0.02 * np.exp(-self._max_forward_distance**2 / 0.05)
 
         # Velocity -> velocity direction close to [0,0,1]
         # reward += max_height_normalized * 0.01 * np.exp(-self._max_vel_err**2 / 0.1**2)
@@ -265,7 +265,7 @@ class MultipleJumpingInPlace(TaskJumping):
         else:
             # Malus for crashing
             # Optionally: no reward in case of crash
-            reward -= 0.08 * (1 + 0.1 * max_height_normalized)
+            reward -= 0.08 * (1 + 0.3 * max_height_normalized)
         return reward
 
     def _reset(self, env):
