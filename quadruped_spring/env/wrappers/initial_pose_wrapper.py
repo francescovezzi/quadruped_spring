@@ -18,6 +18,7 @@ class InitialPoseWrapper(gym.Wrapper):
     def print_info(self):
         print('*** Initial Pose Wrapper Info ***')
         print(f"initial pitch desired -> {self._phi_des} Degree")
+        print('')
 
     def step(self, action):
         obs, reward, done, infos = self.env.step(action)
