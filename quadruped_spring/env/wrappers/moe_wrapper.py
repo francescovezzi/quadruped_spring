@@ -4,7 +4,6 @@ import os
 import gym
 import numpy as np
 import yaml
-from cv2 import exp
 from sb3_contrib import ARS
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.vec_env import VecNormalize
