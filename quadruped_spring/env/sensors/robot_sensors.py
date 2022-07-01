@@ -476,6 +476,32 @@ class LinearVelocity2D(Sensor):
         self._sample_noise()
 
 
+class BaseHeightVelocity(Sensor):
+    """Base height velocity."""
+
+    def __init__(self):
+        super().__init__()
+        self._name = "Base Linear Velocity z direction"
+
+    def _update_sensor_info(self):
+        return super()._update_sensor_info(
+            high=self._robot_config.VEL_LIN_HIGH[2],
+            low=self._robot_config.VEL_LIN_LOW[2],
+            noise_std=self._robot_config.VEL_LIN_NOISE[2],
+        )
+
+    def _get_data(self):
+        lin_vel = self._robot.GetBaseLinearVelocity()[2]
+        self._data = lin_vel
+
+    def _reset_sensor(self):
+        self._get_data()
+        self._sample_noise()
+
+    def _on_step(self):
+        self._get_data()
+        self._sample_noise()
+
 class SensorList:
     """Manage all the robot sensors"""
 

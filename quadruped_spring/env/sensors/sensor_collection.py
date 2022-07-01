@@ -58,6 +58,13 @@ class SensorCollection(CollectionBase):
             rs.HeightGround,
             rs.BooleanContact,
         ]
+        self._ARS_BASIC = [
+            rs.JointPosition,
+            rs.JointVelocity,
+            rs.Pitch,
+            rs.Height,
+            rs.BaseHeightVelocity,
+        ]
         self._dict = {
             "DEFAULT": self._DEFAULT,
             "ENCODER": self._ENCODER,
@@ -69,5 +76,6 @@ class SensorCollection(CollectionBase):
             "ARS": self._ARS,
             "ARS_HEIGHT": self._ARS_HEIGHT,
             "ARS_CONTACT": self._ARS_CONTACT,
+            "ARS_BASIC": self._ARS_BASIC,
         }
         self._element_type = "sensor package"
