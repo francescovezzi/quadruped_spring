@@ -585,7 +585,7 @@ def build_env():
         "enable_action_interpolation": False,
         "enable_action_filter": True,
         "task_env": "MULTIPLE_JUMPING_IN_PLACE",
-        "observation_space_mode": "ARS_HEIGHT",
+        "observation_space_mode": "ARS_BASIC",
         "action_space_mode": "SYMMETRIC",
         "enable_env_randomization": False,
         "env_randomizer_mode": "SETTLING_RANDOMIZER",
@@ -607,15 +607,15 @@ def test_env():
     # env.print_curriculum_info()
     sim_steps = 1500
     obs = env.reset()
-    print(env.robot.GetMotorAngles())
+    # print(env.robot.GetMotorAngles())
     for i in range(sim_steps):
         # action = np.random.rand(action_dim) * 2 - 1
         # action = np.full(action_dim, 0)
         # action = env.get_settling_action()
         action = [1, 0]
         obs, reward, done, info = env.step(action)
-        if done:
-            print(env.robot.GetMotorAngles())
+        # if done:
+        #     print(env.robot.GetMotorAngles())
     env.close()
     print("end")
 
