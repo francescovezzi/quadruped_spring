@@ -207,7 +207,7 @@ class JumpingInPlace(TaskJumping):
         else:
             # Malus for crashing
             # Optionally: no reward in case of crash
-            reward -= 0.08 * (1 + 0.1 * max_height_normalized)
+            reward -= 0.08 * (1 + 0.8 * max_height_normalized)
         return reward
 
     def _reset(self, env):
