@@ -502,6 +502,7 @@ class BaseHeightVelocity(Sensor):
         self._get_data()
         self._sample_noise()
 
+
 class SensorList:
     """Manage all the robot sensors"""
 

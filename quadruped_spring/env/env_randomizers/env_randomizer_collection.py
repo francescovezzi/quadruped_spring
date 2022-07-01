@@ -2,8 +2,8 @@ from quadruped_spring.env.env_randomizers.env_randomizer import (
     EnvRandomizerDisturbance,
     EnvRandomizerInitialConfiguration,
     EnvRandomizerMasses,
+    EnvRandomizerPitch,
     EnvRandomizerSprings,
-    EnvRandomizerPitch
 )
 from quadruped_spring.utils.base_collection import CollectionBase
 

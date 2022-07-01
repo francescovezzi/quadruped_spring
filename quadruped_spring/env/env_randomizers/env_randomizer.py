@@ -1,14 +1,11 @@
 from email.mime import base
 
 import numpy as np
-
-from quadruped_spring.env.env_randomizers.env_randomizer_base import EnvRandomizerBase
-from quadruped_spring.utils.timer import Timer
-
 from stable_baselines3.common.env_util import is_wrapped
 
+from quadruped_spring.env.env_randomizers.env_randomizer_base import EnvRandomizerBase
 from quadruped_spring.env.wrappers.initial_pose_wrapper import InitialPoseWrapper
-
+from quadruped_spring.utils.timer import Timer
 
 # Relative range.
 BASE_MASS_ERROR_RANGE = (-0.2, 0.2)  # 0.2 means 20%
@@ -198,7 +195,7 @@ class EnvRandomizerSprings(EnvRandomizerBase):
     def _randomize_springs(self):
         self._env.robot.set_spring_stiffness(self.get_new_stiffness())
         self._env.robot.set_spring_damping(self.get_new_damping())
-        
+
 
 class EnvRandomizerPitch(EnvRandomizerBase):
     """Add some noise in the settling robot configuration."""
@@ -219,6 +216,7 @@ class EnvRandomizerPitch(EnvRandomizerBase):
             self._env.set_phi_desired(sample_pitch_angle)
         else:
             pass
+
 
 class Disturbe:
     """

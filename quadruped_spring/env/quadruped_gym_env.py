@@ -13,8 +13,8 @@ import pybullet_data
 import pybullet_utils.bullet_client as bc
 from gym import spaces
 from gym.utils import seeding
-from stable_baselines3.common.utils import set_random_seed
 from stable_baselines3.common.env_util import is_wrapped
+from stable_baselines3.common.utils import set_random_seed
 
 import quadruped_spring.go1.configs_go1_with_springs as go1_config_with_springs
 import quadruped_spring.go1.configs_go1_without_springs as go1_config_without_springs
@@ -476,7 +476,7 @@ class QuadrupedGymEnv(gym.Env):
     ########################################################
     def get_action_interface_dim(self):
         return self._ac_interface.get_action_space_dim()
-    
+
     def get_action_dim(self):
         return self._action_dim
 
@@ -552,7 +552,7 @@ class QuadrupedGymEnv(gym.Env):
             return self._env_randomizer_mode
         else:
             return "noone"
-        
+
     def reinit_randomizers(self, env):
         """Reinitialize randomizers."""
         self._env_randomizers._reinit(env)

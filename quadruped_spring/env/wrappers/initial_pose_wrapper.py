@@ -16,11 +16,11 @@ class InitialPoseWrapper(gym.Wrapper):
         self.print_info()
         if self.env.get_randomizer_mode() != "noone":
             self.env.reinit_randomizers(self)
-        
+
     def set_phi_desired(self, phi_des):
         self._phi_des = phi_des
         self.phi_des = np.deg2rad(phi_des)
-        
+
     def get_phi_desired(self):
         return self._phi_des
 
