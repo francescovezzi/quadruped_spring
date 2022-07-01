@@ -14,15 +14,20 @@ class InitialPoseWrapper(gym.Wrapper):
         self._phi_des = phi_des
         self.phi_des = np.deg2rad(phi_des)
         self.print_info()
+        if self.env.get_randomizer_mode() != "noone":
+            self.env.reinit_randomizers(self)
+        
+    def set_phi_desired(self, phi_des):
+        self._phi_des = phi_des
+        self.phi_des = np.deg2rad(phi_des)
+        
+    def get_phi_desired(self):
+        return self._phi_des
 
     def print_info(self):
         print("*** Initial Pose Wrapper Info ***")
         print(f"initial pitch desired -> {self._phi_des} Degree")
         print("")
-
-    def step(self, action):
-        obs, reward, done, infos = self.env.step(action)
-        return obs, reward, done, infos
 
     def reset(self):
         self.env.reset()
