@@ -32,7 +32,7 @@ class MoEWrapper(gym.Wrapper):
     def change_action_space(self):
         n = len(self.experts)
         self.env.setupActionSpace(n)
-    
+
     @staticmethod
     def scale_weights(weights):
         """Scale weights into [0, 1] from [-1, 1]"""

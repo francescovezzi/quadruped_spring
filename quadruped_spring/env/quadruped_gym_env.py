@@ -626,7 +626,7 @@ def test_env():
     for i in range(sim_steps):
         # action = np.random.rand(action_dim) * 2 - 1
         # action = np.full(action_dim, 0)
-        action = np.array([0, 0, -0.1, 0, 0, +0.3])
+        # action = np.array([0, 0, -0.1, 0, 0, +0.3])
         # action = env.get_settling_action()
         action = [1, 0, 0]
         obs, reward, done, info = env.step(action)
