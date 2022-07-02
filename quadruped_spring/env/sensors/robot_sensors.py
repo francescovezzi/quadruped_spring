@@ -2,6 +2,7 @@ import numpy as np
 
 from quadruped_spring.env.sensors.sensor import Sensor
 
+#
 
 class BooleanContact(Sensor):
     """Boolean variables specifying if the feet are in contact with ground"""
