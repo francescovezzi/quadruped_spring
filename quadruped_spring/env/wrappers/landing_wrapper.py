@@ -66,11 +66,10 @@ class LandingWrapper(gym.Wrapper):
         obs, reward, done, infos = self.env.step(action)
 
         if self.env.task.is_switched_controller() and not done:
-            if self.is_moe_wrapped:
-                self.set_bypass_experts(True)
-                action = self.env.get_last_action()
             _, reward, done, infos = self.take_off_phase(action)
             if not done:
+                if self.is_moe_wrapped:
+                    self.set_bypass_experts(True)
                 _, reward, done, infos = self.landing_phase()
 
         if done and self.is_moe_wrapped:
