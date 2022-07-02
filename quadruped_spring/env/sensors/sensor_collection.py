@@ -15,11 +15,10 @@ class SensorCollection(CollectionBase):
 
     def __init__(self):
         super().__init__()
-        self._DEFAULT = [rs.IMU, rs.FeetPostion, rs.FeetVelocity, rs.GroundReactionForce]
-        self._ENCODER = [rs.IMU, rs.JointPosition, rs.JointVelocity, rs.GroundReactionForce]
+        self._ENCODER = [rs.JointPosition, rs.JointVelocity]
         self._ENCODER_2 = [rs.LinearVelocity, rs.AngularVelocity, rs.JointPosition, rs.JointVelocity]
-        self._CARTESIAN_NO_IMU = [rs.FeetPostion, rs.FeetVelocity, rs.GroundReactionForce]
-        self._ANGLE_NO_IMU = [rs.JointPosition, rs.JointVelocity, rs.GroundReactionForce]
+        self._CARTESIAN_NO_IMU = [rs.FeetPostion, rs.FeetVelocity]
+        self._ANGLE_NO_IMU = [rs.JointPosition, rs.JointVelocity]
         self._CUSTOM_3D = [
             rs.Quaternion,
             rs.DesiredBaseLinearVelocityXZ,
@@ -66,7 +65,6 @@ class SensorCollection(CollectionBase):
             rs.BaseHeightVelocity,
         ]
         self._dict = {
-            "DEFAULT": self._DEFAULT,
             "ENCODER": self._ENCODER,
             "ENCODER_2": self._ENCODER_2,
             "CARTESIAN_NO_IMU": self._CARTESIAN_NO_IMU,

@@ -2,6 +2,5 @@
 *.egg-info
 __pycache__/
 quadruped_spring/logs/
-test_control.py
-make_performance_report.sh
-quadruped_spring/personal_stuff/
+quadruped_spring/personal_stuff
+

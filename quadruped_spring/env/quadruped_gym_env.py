@@ -5,6 +5,7 @@ import time
 
 # gym
 import gym
+import matplotlib.pyplot as plt
 import numpy as np
 
 # pybullet
@@ -143,9 +144,8 @@ class QuadrupedGymEnv(gym.Env):
         self.setupActionSpace(self._action_dim)
 
         self._observation_space_mode = observation_space_mode
-        self._robot_sensors = SensorList(SensorCollection().get_el(self._observation_space_mode))
+        self._robot_sensors = SensorList(SensorCollection().get_el(self._observation_space_mode), self)
         self.setupObservationSpace()
-
         self.task_env = task_env
         self.task = TaskCollection().get_el(self.task_env)()
         self.task.set_curriculum_level(curriculum_level, verbose=0)
@@ -173,7 +173,7 @@ class QuadrupedGymEnv(gym.Env):
     # RL Observation and Action spaces
     ######################################################################################
     def setupObservationSpace(self):
-        self._robot_sensors._init(robot_config=self._robot_config)
+        self._robot_sensors._init()
         obs_high = self._robot_sensors._get_high_limits() + OBSERVATION_EPS
         obs_low = self._robot_sensors._get_low_limits() - OBSERVATION_EPS
         self.observation_space = spaces.Box(obs_low, obs_high, dtype=np.float32)
@@ -268,6 +268,12 @@ class QuadrupedGymEnv(gym.Env):
         self._robot_sensors._on_step()
         obs = self.get_observation()
 
+        sens_height = obs["Height"]
+        true_height = self.robot.GetBasePosition()[2]
+        diff_height = sens_height - true_height
+        infos["diff_height"] = diff_height
+        infos["real_height"] = true_height
+        infos["sens_height"] = sens_height
         return obs, reward, done, infos
 
     ###################################################
@@ -592,8 +598,8 @@ def build_env():
         "add_noise": False,
         "enable_action_interpolation": False,
         "enable_action_filter": True,
-        "task_env": "MULTIPLE_JUMPING_IN_PLACE",
-        "observation_space_mode": "ARS_BASIC",
+        "task_env": "JUMPING_HEIGHT",
+        "observation_space_mode": "ARS_HEIGHT",
         "action_space_mode": "SYMMETRIC",
         "enable_env_randomization": True,
         "env_randomizer_mode": "PITCH_RANDOMIZER",
@@ -620,6 +626,7 @@ def test_env():
     for i in range(sim_steps):
         # action = np.random.rand(action_dim) * 2 - 1
         # action = np.full(action_dim, 0)
+        action = np.array([0, 0, -0.1, 0, 0, +0.3])
         # action = env.get_settling_action()
         action = [1, 0, 0]
         obs, reward, done, info = env.step(action)

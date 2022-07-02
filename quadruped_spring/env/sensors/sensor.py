@@ -4,8 +4,9 @@ import numpy as np
 class Sensor:
     """A prototype class for a generic sensor"""
 
-    def __init__(self):
+    def __init__(self, env):
         self._data = None
+        self._env = env
         self._robot = None
         self._name = "please give me a name"
 
@@ -44,6 +45,7 @@ class Sensor:
 
     def _read_dirty_data(self):
         """Get Sensor data with noise"""
+        # print(self._data + self._add_obs_noise)
         return self._data + self._add_obs_noise
 
     def _on_step(self):
