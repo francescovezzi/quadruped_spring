@@ -75,7 +75,7 @@ class SensorEncoderIMUBased(Sensor):
 
     def _get_imu_measure(self):
         return self._imu._read_dirty_data()
-    
+
 
 class BooleanContact(Sensor):
     """Boolean variables specifying if the feet are in contact with ground"""
@@ -102,8 +102,8 @@ class BooleanContact(Sensor):
     def _on_step(self):
         self._get_data()
         self._sample_noise()
-        
-        
+
+
 class Height(Sensor):
     """robot height."""
 
@@ -379,6 +379,8 @@ class FeetPostion(Sensor):
 
     def __init__(self, env):
         super().__init__(env)
+
+
 class FeetVelocity(Sensor):
     """Feet velocity in leg frame"""
 

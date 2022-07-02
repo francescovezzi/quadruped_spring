@@ -345,7 +345,7 @@ class Quadruped(object):
         """Get Jacobian and foot position of leg legID.
         Leg 0: FR; Leg 1: FL; Leg 2: RR ; Leg 3: RL;
         """
-        
+
         q = q[legID * 3 : legID * 3 + 3]
 
         # rename links
