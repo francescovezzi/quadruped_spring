@@ -60,7 +60,7 @@ class MoEWrapper(gym.Wrapper):
 
     def _build_model_sensors(self, model):
         observation_space_mode = model.env.env_method("get_observation_space_mode")[0]
-        robot_sensors = SensorList(SensorCollection().get_el(observation_space_mode))
+        robot_sensors = SensorList(SensorCollection().get_el(observation_space_mode), self)
         robot_sensors._init(robot_config=self.env.get_robot_config())
         return robot_sensors
 

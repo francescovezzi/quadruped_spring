@@ -766,12 +766,12 @@ class SensorList:
             s._reset_sensor()
         self._obs_dim = self._compute_obs_dim()
 
-    def _init(self):
+    def _init(self, robot_config):
         for idx, s in enumerate(self._sensor_list):
             self._sensor_list[idx] = s(self._env)
         self._order_sensors()
         for s in self._sensor_list:
-            s._init_sensor(self._env._robot_config)
+            s._init_sensor(robot_config)
             s._update_sensor_info()
 
     def _turn_on(self, robot):

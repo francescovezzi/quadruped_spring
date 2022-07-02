@@ -173,7 +173,7 @@ class QuadrupedGymEnv(gym.Env):
     # RL Observation and Action spaces
     ######################################################################################
     def setupObservationSpace(self):
-        self._robot_sensors._init()
+        self._robot_sensors._init(self.get_robot_config())
         obs_high = self._robot_sensors._get_high_limits() + OBSERVATION_EPS
         obs_low = self._robot_sensors._get_low_limits() - OBSERVATION_EPS
         self.observation_space = spaces.Box(obs_low, obs_high, dtype=np.float32)
@@ -598,7 +598,7 @@ def build_env():
         "add_noise": False,
         "enable_action_interpolation": False,
         "enable_action_filter": True,
-        "task_env": "JUMPING_HEIGHT",
+        "task_env": "JUMPING_IN_PLACE",
         "observation_space_mode": "ARS_HEIGHT",
         "action_space_mode": "SYMMETRIC",
         "enable_env_randomization": True,
