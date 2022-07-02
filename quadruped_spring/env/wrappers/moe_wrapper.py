@@ -32,9 +32,17 @@ class MoEWrapper(gym.Wrapper):
     def change_action_space(self):
         n = len(self.experts)
         self.env.setupActionSpace(n)
+    
+    @staticmethod
+    def scale_weights(weights):
+        """Scale weights into [0, 1] from [-1, 1]"""
+        weights = np.clip(weights, -1, 1)
+        ret = (weights + 1) / 2
+        return np.clip(ret, 0, 1)
 
     def step(self, action):
-        action_ensemble = self.get_action_ensemble(weights=action)
+        weights = self.scale_weights(weights=action)
+        action_ensemble = self.get_action_ensemble(weights)
         env_action = action if self.bypass_experts else action_ensemble
         obs, reward, done, infos = self.env.step(env_action)
         self.step_expert_sensors()
