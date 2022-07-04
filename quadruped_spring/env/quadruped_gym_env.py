@@ -115,7 +115,7 @@ class QuadrupedGymEnv(gym.Env):
           curriculum_level: Scalar in [0,1] specyfing the task difficulty level.
         """
         self.seed()
-        self.verobse = verbose
+        self.verbose = verbose
         self._enable_springs = enable_springs
         if self._enable_springs:
             self._robot_config = go1_config_with_springs
