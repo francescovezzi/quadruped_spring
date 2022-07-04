@@ -81,7 +81,7 @@ class QuadrupedGymEnv(gym.Env):
         enable_env_randomization=False,
         env_randomizer_mode="MASS_RANDOMIZER",
         curriculum_level=0.0,
-        verbose = 0,
+        verbose=0,
     ):
         """Initialize the quadruped gym environment.
 
