@@ -13,7 +13,8 @@ class InitialPoseWrapper(gym.Wrapper):
         super().__init__(env)
         self._phi_des = phi_des
         self.phi_des = np.deg2rad(phi_des)
-        self.print_info()
+        if self.env.verbose > 0:
+            self.print_info()
         if self.env.get_randomizer_mode() != "noone":
             self.env.reinit_randomizers(self)
 

@@ -81,6 +81,7 @@ class QuadrupedGymEnv(gym.Env):
         enable_env_randomization=False,
         env_randomizer_mode="MASS_RANDOMIZER",
         curriculum_level=0.0,
+        verbose = 0,
     ):
         """Initialize the quadruped gym environment.
 
@@ -114,6 +115,7 @@ class QuadrupedGymEnv(gym.Env):
           curriculum_level: Scalar in [0,1] specyfing the task difficulty level.
         """
         self.seed()
+        self.verobse = verbose
         self._enable_springs = enable_springs
         if self._enable_springs:
             self._robot_config = go1_config_with_springs
@@ -167,7 +169,8 @@ class QuadrupedGymEnv(gym.Env):
             self._env_randomizers._init(self)
 
         self.reset()
-        self.print_info()
+        if self.verbose > 0:
+            self.print_info()
 
     ######################################################################################
     # RL Observation and Action spaces
