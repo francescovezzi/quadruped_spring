@@ -64,6 +64,7 @@ class SensorCollection(CollectionBase):
             rs.Height,
             rs.BaseHeightVelocity,
         ]
+        self._PHI = [rs.InitialPhiDesired]
         self._dict = {
             "ENCODER": self._ENCODER,
             "ENCODER_2": self._ENCODER_2,
@@ -75,5 +76,6 @@ class SensorCollection(CollectionBase):
             "ARS_HEIGHT": self._ARS_HEIGHT,
             "ARS_CONTACT": self._ARS_CONTACT,
             "ARS_BASIC": self._ARS_BASIC,
+            "PHI_DES": self._PHI,
         }
         self._element_type = "sensor package"
