@@ -25,6 +25,24 @@ class MoEWrapper(gym.Wrapper):
         self.experts = self._get_models()
         self.change_action_space()
         self.bypass_experts = False
+        self.env.reinit_sensors(self)
+        self.update_phi_desired_info()
+        
+    def update_phi_desired_info(self):
+        from quadruped_spring.env.env_randomizers.env_randomizer import PITCH_ANGLE_RANGE
+        self._phi_des = self.env.get_phi_desired()
+        self._phi_des_min, self._phi_des_max = PITCH_ANGLE_RANGE
+        self._phi_des_mean = (self._phi_des_min + self._phi_des_max) / 2
+        self._phi_des_std = (self._phi_des_min + self._phi_des_max) / np.sqrt(12)
+        
+    def normalize_phi(self, phi):
+            return (phi - self._phi_des_mean) / self._phi_des_std
+    
+    def get_phi_des_normalized(self):
+        if self.env.get_randomizer_mode() != "noone":
+            return self.normalize_phi(self._phi_des)
+        else:
+            raise RuntimeError('Used normalization for phi desired but no Pitch randomization is used.')
 
     def set_bypass_experts(self, boolean):
         self.bypass_experts = boolean
@@ -75,6 +93,8 @@ class MoEWrapper(gym.Wrapper):
     def _get_models(self):
         models_path = os.path.join(self._experts_folder, "models/ars")
         model_list = []
+        if not os.path.exists(models_path):
+            raise RuntimeError(f'{models_path} not found.')
         for model_folder in glob.glob(os.path.join(models_path, "*")):
             model = self.create_model(model_folder)
             model_sensors = self._build_model_sensors(model)
