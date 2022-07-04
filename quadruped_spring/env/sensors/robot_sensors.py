@@ -1,6 +1,8 @@
 import numpy as np
 
 from quadruped_spring.env.sensors.sensor import Sensor
+from quadruped_spring.env.wrappers.initial_pose_wrapper import InitialPoseWrapper as IPW
+from stable_baselines3.common.env_util import is_wrapped
 
 
 class SensorEncoderIMUBased(Sensor):
@@ -692,8 +694,8 @@ class LinearVelocity2D(Sensor):
 class BaseHeightVelocity(Sensor):
     """Base height velocity."""
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, env):
+        super().__init__(env)
         self._name = "Base Linear Velocity z direction"
 
     def _update_sensor_info(self):
@@ -706,6 +708,35 @@ class BaseHeightVelocity(Sensor):
     def _get_data(self):
         lin_vel = self._robot.GetBaseLinearVelocity()[2]
         self._data = lin_vel
+
+    def _reset_sensor(self):
+        self._get_data()
+        self._sample_noise()
+
+    def _on_step(self):
+        self._get_data()
+        self._sample_noise()
+
+
+class InitialPhiDesired(Sensor):
+    """Base height velocity."""
+
+    def __init__(self, env):
+        super().__init__(env)
+        self._name = "Initial phi desired"
+
+    def _update_sensor_info(self):
+        return super()._update_sensor_info(
+            high = np.array([-np.pi]),
+            low = np.array([np.pi]),
+            noise_std = 0,
+        )
+
+    def _get_data(self):
+        if is_wrapped(self._env, IPW):
+            self._data = np.array([self._env.get_phi_des_normalized()])
+        else:
+            self._data = None
 
     def _reset_sensor(self):
         self._get_data()
@@ -806,3 +837,7 @@ class SensorList:
             self._sensor_list.reverse()
             self._sensor_list.append(sens)
             self._sensor_list.reverse()
+
+    def _reinit(self, env):
+        for s in self._sensor_list:
+            s._update_env(env)
