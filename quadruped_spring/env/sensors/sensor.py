@@ -46,7 +46,10 @@ class Sensor:
     def _read_dirty_data(self):
         """Get Sensor data with noise"""
         # print(self._data + self._add_obs_noise)
-        return self._data + self._add_obs_noise
+        if np.all(self._noise_std > 0):
+            return self._data + self._add_obs_noise
+        else:
+            return self._data
 
     def _on_step(self):
         """Callback for step method"""
@@ -55,3 +58,7 @@ class Sensor:
     def _get_data(self):
         """Get sensor data"""
         pass
+
+    def _update_env(self, env):
+        """Update the environment reference"""
+        self._env = env
