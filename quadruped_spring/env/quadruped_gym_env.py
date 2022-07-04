@@ -195,7 +195,6 @@ class QuadrupedGymEnv(gym.Env):
         """Set up action space for RL."""
         action_high = np.array([1] * action_dim)
         self.action_space = spaces.Box(-action_high, action_high, dtype=np.float32)
-        self._last_action = np.zeros(action_dim)
 
     ######################################################################################
     # Step simulation, map policy network actions to joint commands, etc.
@@ -268,12 +267,6 @@ class QuadrupedGymEnv(gym.Env):
         self._robot_sensors._on_step()
         obs = self.get_observation()
 
-        sens_height = obs["Height"]
-        true_height = self.robot.GetBasePosition()[2]
-        diff_height = sens_height - true_height
-        infos["diff_height"] = diff_height
-        infos["real_height"] = true_height
-        infos["sens_height"] = sens_height
         return obs, reward, done, infos
 
     ###################################################
@@ -281,7 +274,7 @@ class QuadrupedGymEnv(gym.Env):
     ###################################################
     def _build_action_filter(self):
         sampling_rate = 1 / self._env_time_step
-        num_joints = self._action_dim
+        num_joints = self.get_action_interface_dim()
         a_filter = action_filter.ActionFilterButter(sampling_rate=sampling_rate, num_joints=num_joints)
         # if self._enable_springs:
         #     a_filter.highcut = 2.5
@@ -307,7 +300,7 @@ class QuadrupedGymEnv(gym.Env):
 
         self._env_step_counter = 0
         self._sim_step_counter = 0
-
+        self._last_action = np.zeros(self.get_action_interface_dim())
         self._ac_interface._reset(self.robot)
         if self._enable_env_randomization:
             self._env_randomizers.randomize_env()
@@ -562,6 +555,10 @@ class QuadrupedGymEnv(gym.Env):
     def reinit_randomizers(self, env):
         """Reinitialize randomizers."""
         self._env_randomizers._reinit(env)
+    
+    def reinit_sensors(self, env):
+        """Reinitialize sensors."""
+        self._robot_sensors._reinit(env)
 
     def get_ac_interface(self):
         """Return the action control interface."""
@@ -590,7 +587,7 @@ class QuadrupedGymEnv(gym.Env):
 
 def build_env():
     env_config = {
-        "render": True,
+        "render": False,
         "on_rack": False,
         "motor_control_mode": "PD",
         "action_repeat": 10,
@@ -599,7 +596,7 @@ def build_env():
         "enable_action_interpolation": False,
         "enable_action_filter": True,
         "task_env": "JUMPING_IN_PLACE",
-        "observation_space_mode": "ARS_HEIGHT",
+        "observation_space_mode": "PHI_DES",
         "action_space_mode": "SYMMETRIC",
         "enable_env_randomization": True,
         "env_randomizer_mode": "PITCH_RANDOMIZER",
@@ -607,7 +604,7 @@ def build_env():
     }
     env = QuadrupedGymEnv(**env_config)
 
-    env = InitialPoseWrapper(env, phi_des=0.0)
+    env = InitialPoseWrapper(env, phi_des=5.0)
     # env = RestWrapper(env)
     env = MoEWrapper(env, "logs/MoE_pitch_28_06")
     env = ObsFlatteningWrapper(env)
