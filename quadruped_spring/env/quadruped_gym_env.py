@@ -555,7 +555,7 @@ class QuadrupedGymEnv(gym.Env):
     def reinit_randomizers(self, env):
         """Reinitialize randomizers."""
         self._env_randomizers._reinit(env)
-    
+
     def reinit_sensors(self, env):
         """Reinitialize sensors."""
         self._robot_sensors._reinit(env)

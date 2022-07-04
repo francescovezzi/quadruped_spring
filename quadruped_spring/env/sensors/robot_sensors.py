@@ -1,8 +1,8 @@
 import numpy as np
+from stable_baselines3.common.env_util import is_wrapped
 
 from quadruped_spring.env.sensors.sensor import Sensor
 from quadruped_spring.env.wrappers.initial_pose_wrapper import InitialPoseWrapper as IPW
-from stable_baselines3.common.env_util import is_wrapped
 
 
 class SensorEncoderIMUBased(Sensor):
@@ -727,9 +727,9 @@ class InitialPhiDesired(Sensor):
 
     def _update_sensor_info(self):
         return super()._update_sensor_info(
-            high = np.array([-np.pi]),
-            low = np.array([np.pi]),
-            noise_std = 0,
+            high=np.array([-np.pi]),
+            low=np.array([np.pi]),
+            noise_std=0,
         )
 
     def _get_data(self):
