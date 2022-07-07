@@ -7,10 +7,12 @@ import yaml
 from sb3_contrib import ARS
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.vec_env import VecNormalize
+from stable_baselines3.common.utils import set_random_seed
 
 from quadruped_spring.env.sensors.robot_sensors import SensorList
 from quadruped_spring.env.sensors.sensor_collection import SensorCollection
 from quadruped_spring.env.wrappers.obs_flattening_wrapper import ObsFlatteningWrapper
+
 
 ENV = "QuadrupedSpring-v0"
 MODEL = "best_model"
@@ -19,14 +21,18 @@ MODEL = "best_model"
 class MoEWrapper(gym.Wrapper):
     """Mixture of Experts ensembling."""
 
-    def __init__(self, env, experts_folder):
+    def __init__(self, env, experts_folder, seed=None):
         super().__init__(env)
         self._experts_folder = experts_folder
+        self.seed = seed
         self.experts = self._get_models()
         self.change_action_space()
         self.bypass_experts = False
         self.env.reinit_sensors(self)
         self.update_phi_desired_info()
+    
+    def get_experts_number(self):
+        return len(self.experts)
 
     def update_phi_desired_info(self):
         from quadruped_spring.env.env_randomizers.env_randomizer import PITCH_ANGLE_RANGE
@@ -100,6 +106,8 @@ class MoEWrapper(gym.Wrapper):
             model = self.create_model(model_folder)
             model_sensors = self._build_model_sensors(model)
             model_list.append((model, model_sensors))
+        if self.seed is not None:
+            set_random_seed(self.seed)
         return model_list
 
     @staticmethod

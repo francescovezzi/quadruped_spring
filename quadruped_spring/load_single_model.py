@@ -106,6 +106,8 @@ custom_objects = {
 model = LEARNING_ALGS[LEARNING_ALG].load(model_file, env, custom_objects=custom_objects)
 print(f"\nLoaded model: {model_file}\n")
 set_random_seed(SEED)
+
+# run model
 obs = env.reset()
 n_episodes = EVAL_EPISODES
 total_reward = 0
