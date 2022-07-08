@@ -15,7 +15,7 @@ MAX_SETTLING_ACTION_DISTURBANCE = (0.05, 0.04, 0.03)  # Hip, thigh, calf
 # Values used for nominal springs parameters randomization
 SPRING_STIFFNESS_MAX_ERROR_RANGE = (0.1, 0.1, 0.1)  # Hip, thigh, calf
 SPRING_DAMPING_MAX_ERROR_RANGE = (0.05, 0.05, 0.05)  # Hip, thigh, calf
-PITCH_ANGLE_RANGE = (0.0, 10.0)  # Degrees
+PITCH_ANGLE_RANGE = (0, 10)  # Degrees
 
 # Absolute range.
 MAX_POS_MASS_OFFSET = (0.1, 0.0, 0.05)  # meters

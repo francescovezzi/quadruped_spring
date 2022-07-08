@@ -5,6 +5,8 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 os.sys.path.insert(0, currentdir)
 
 from importlib import import_module
+from matplotlib import pyplot as plt
+import numpy as np
 
 import yaml
 from sb3_contrib import ARS
@@ -22,14 +24,14 @@ SEED = 24
 
 LEARNING_ALGS = {"ars": ARS}
 LEARNING_ALG = "ars"
-SUB_FOLDER = "MoE_pitch_28_06"
+SUB_FOLDER = "MoE_28_06"
 ENV_ID = "QuadrupedSpring-v0"
 ID = "1"
 MODEL = "rl_model_22000000_steps"
 MODEL = "best_model"
 
 REC_VIDEO = False
-SAVE_PLOTS = True
+SAVE_PLOTS = False
 RENDER = False
 EVAL_EPISODES = 1
 ENABLE_ENV_RANDOMIZATION = False
@@ -37,6 +39,9 @@ ENV_RANDOMIZER = "MASS_SETTLING_RANDOMIZER"
 CURRICULUM_LEVEL = 0.2
 
 LOG_DIR = f"logs/{SUB_FOLDER}"
+
+MOE_ENABLED = True
+PRINT_PHI = MOE_ENABLED
 
 
 def callable_env(env_id, wrappers, kwargs):
@@ -75,6 +80,7 @@ model_dir = os.path.join(currentdir, aux_dir, LEARNING_ALG, f"{ENV_ID}_{ID}")
 model_file = os.path.join(model_dir, MODEL)
 args_file = os.path.join(model_dir, ENV_ID, "args.yml")
 stats_file = os.path.join(model_dir, ENV_ID, "vecnormalize.pkl")
+plot_dir = os.path.join(LOG_DIR, 'plots')
 
 # Load env kwargs
 env_kwargs = {}
@@ -127,6 +133,20 @@ if REC_VIDEO:
     env.env_method("release_video", indices=0)
 if SAVE_PLOTS:
     env.env_method("release_plots", indices=0)
+if PRINT_PHI:
+    phi_min, phi_max = env.env_method("get_phi_range", indices=0)[0]
+    phi_list = np.linspace(phi_min, phi_max, 500)
+    phi_list_normalized = [env.env_method("normalize_phi", phi, indices=0)[0] for phi in phi_list]
+    weights = [model.predict([phi]) for phi in phi_list_normalized]
+    weights = [env.env_method("scale_weights", weight, indices=0)[0] for weight in weights]
+    fig, axes = plt.subplots(3, 1, sharex=True)
+    fig.suptitle(r'ensemble functions')
+    y_labels = [r'w0', r'w1', r'w2']
+    for i, ax in enumerate(axes):
+        ax.plot(phi_list, weights[:, i])
+        ax.set_xlabel(r'$\phi$')
+        ax.set_ylabel(y_labels[i])
+    fig.savefig(os.path.join(plot_dir, f'{ENV_ID}_{ID}'), 'weights')
 
 env_randomizer = env.env_method("get_randomizer_mode", indices=0)[0]
 print("\n")

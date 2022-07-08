@@ -18,18 +18,92 @@ ENV = "QuadrupedSpring-v0"
 MODEL = "best_model"
 
 
+class Agent():
+    """Define the single agent."""
+    
+    def __init__(self, expert_folder):
+        self.expert_folder = expert_folder
+        self.model_name = os.path.join(expert_folder, MODEL)
+        self.env = self.load_env()
+        self.model = self.load_model()
+
+    def load_env_kwargs(self):
+        args_path = os.path.join(self.expert_folder, f"{ENV}/args.yml")
+        env_kwargs = {}
+        if os.path.isfile(args_path):
+            with open(args_path, "r") as f:
+                loaded_args = yaml.load(f, Loader=yaml.UnsafeLoader)  # pytype: disable=module-attr
+                if loaded_args["env_kwargs"] is not None:
+                    env_kwargs = loaded_args["env_kwargs"]
+            return env_kwargs
+        else:
+            raise RuntimeError(f"{args_path} file not found.")
+        
+    def load_env(self):
+        stats_file = os.path.join(self.expert_folder, f"{ENV}/vecnormalize.pkl")
+        env_kwargs = self.load_env_kwargs()
+        env = lambda: gym.make(ENV, **env_kwargs)
+        env = make_vec_env(env, n_envs=1)
+        env = VecNormalize.load(stats_file, env)
+        env.training = False  # do not update stats at test time
+        env.norm_reward = False  # reward normalization is not needed at test time
+        return env
+    
+    def get_obs_mode(self):
+        return self.env.env_method('get_observation_mode', indices=0)[0]
+    
+    def load_model(self):
+        custom_objects = {
+            "learning_rate": 0.0,
+            "lr_schedule": lambda _: 0.0,
+            "clip_range": lambda _: 0.0,
+            "delta_std_schedule": lambda _: 0.0,
+        }
+        model = ARS.load(self.model_name, self.env, custom_objects=custom_objects)
+        return model
+        
+    def get_prediction(self, obs):
+        return self.model.predict(obs)
+    
+
+class AgentList():
+    
+    def __init__(self, agents_folder):
+        self.agents_folder = agents_folder
+        self.agent_list = []
+        self.fill_agent_list()
+        
+    def get_experts_number(self):
+        return len(self.agent_list)
+        
+    def fill_agent_list(self):
+        for agent_folder in glob.glob(os.path.join(self.agents_folder, '*')):
+            agent = Agent(agent_folder)
+            self.agent_list.append(agent)
+            
+    def get_agents_observation_mode(self):
+        obs_mode_list = []
+        for agent in self.agent_list:
+            obs_mode_list.append(agent.get_obs_mode())
+        if obs_mode_list.count(obs_mode_list[0]) != len(obs_mode_list):
+            raise RuntimeError('agents are using different sensors.')
+        else:
+            return obs_mode_list[0]
+
+
 class MoEWrapper(gym.Wrapper):
     """Mixture of Experts ensembling."""
 
     def __init__(self, env, experts_folder, seed=None):
         super().__init__(env)
         self._experts_folder = experts_folder
-        self.seed = seed
-        self.experts = self._get_models()
+        self._seed = seed
+        self.experts = AgentList(self._experts_folder)
         self.change_action_space()
         self.bypass_experts = False
         self.env.reinit_sensors(self)
         self.update_phi_desired_info()
+    
     
     def get_experts_number(self):
         return len(self.experts)
@@ -44,6 +118,9 @@ class MoEWrapper(gym.Wrapper):
 
     def normalize_phi(self, phi):
         return (phi - self._phi_des_mean) / self._phi_des_std
+    
+    def get_phi_range(self):
+        return self._phi_des_min, self._phi_des_max
 
     def get_phi_des_normalized(self):
         if self.env.get_randomizer_mode() != "noone":
@@ -106,8 +183,8 @@ class MoEWrapper(gym.Wrapper):
             model = self.create_model(model_folder)
             model_sensors = self._build_model_sensors(model)
             model_list.append((model, model_sensors))
-        if self.seed is not None:
-            set_random_seed(self.seed)
+        if self._seed is not None:
+            set_random_seed(self._seed)
         return model_list
 
     @staticmethod
