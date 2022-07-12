@@ -609,7 +609,7 @@ def build_env():
 
     env = InitialPoseWrapper(env, phi_des=5.0)
     # env = RestWrapper(env)
-    env = MoEWrapper(env, "logs/MoE_pitch_28_06")
+    # env = MoEWrapper(env, "logs/MoE_pitch_28_06")
     env = ObsFlatteningWrapper(env)
     env = LandingWrapper(env)
 
@@ -624,11 +624,11 @@ def test_env():
     action_dim = env.get_action_dim()
     # print(env.robot.GetMotorAngles())
     for i in range(sim_steps):
-        # action = np.random.rand(action_dim) * 2 - 1
+        action = np.random.rand(action_dim) * 2 - 1
         # action = np.full(action_dim, 0)
         # action = np.array([0, 0, -0.1, 0, 0, +0.3])
         # action = env.get_settling_action()
-        action = [1, 0, 0]
+        # action = [1, 0, 0]
         obs, reward, done, info = env.step(action)
         # if done:
         #     print(env.robot.GetMotorAngles())

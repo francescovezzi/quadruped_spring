@@ -214,6 +214,50 @@ class JumpingInPlace(TaskJumping):
         super()._reset(env)
 
 
+class JumpingForwardHeight(TaskJumping):
+
+    def __init__(self):
+        super().__init__()
+        self._max_height_task = 0.5
+        self._max_forward_distance_task = 0.8
+
+    def _reward(self):
+        """Reward for each simulation step."""
+        return 0
+
+    def _reward_end_episode(self):
+        """Compute bonus and malus to add to reward at the end of the episode"""
+        reward = 0
+
+        max_height = self._max_height_task
+        if self._relative_max_height > max_height:
+            max_height_normalized = 1.0
+        else:
+            max_height_normalized = self._relative_max_height / max_height
+        
+        max_distance = self._max_forward_distance_task
+        if self._max_forward_distance > self._max_forward_distance_task:
+            max_fwd_distance_normalized = 1.0
+        else:
+            max_fwd_distance_normalized = self._max_forward_distance / max_distance
+
+        reward += 0.3 * max_height_normalized
+        reward += 0.55 * max_fwd_distance_normalized * max_height_normalized
+
+        reward += max_height_normalized * 0.15 * np.exp(-self._max_pitch**2 / 0.15**2)  # orientation
+
+        bonus_malus_term = (max_height_normalized + max_fwd_distance_normalized) / 2
+        if not self._terminated():
+            reward += 0.1 * bonus_malus_term
+        else:
+            reward -= 0.08 * (1 + 0.8 * bonus_malus_term)
+
+        return reward
+
+    def _reset(self, env):
+        super()._reset(env)
+
+
 class MultipleJumpingInPlace(TaskJumping):
     """
     Robot has to perform one single jump in place. It has to fall the closest as possible

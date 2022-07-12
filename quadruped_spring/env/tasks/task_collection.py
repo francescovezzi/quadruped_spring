@@ -24,6 +24,7 @@ class TaskCollection(CollectionBase):
         self.JUMPING_FORWARD = rt.JumpingForward
         self.JUMPING_IN_PLACE_DENSE = rt.JumpingInPlaceDense
         self.MULTIPLE_JUMPING_IN_PLACE = rt.MultipleJumpingInPlace
+        self.JUMPING_FORWARD_HEIGHT = rt.JumpingForwardHeight
         self.NO_TASK = rt.NoTask
         self._element_type = "task"
         self._dict = {
@@ -32,5 +33,6 @@ class TaskCollection(CollectionBase):
             "JUMPING_IN_PLACE_DENSE": self.JUMPING_IN_PLACE_DENSE,
             "JUMPING_IN_PLACE": self.JUMPING_IN_PLACE,
             "MULTIPLE_JUMPING_IN_PLACE": self.MULTIPLE_JUMPING_IN_PLACE,
+            "JUMPING_FORWARD_HEIGHT": self.JUMPING_FORWARD_HEIGHT,
             "NO_TASK": self.NO_TASK,
         }
