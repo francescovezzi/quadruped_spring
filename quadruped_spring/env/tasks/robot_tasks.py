@@ -215,7 +215,6 @@ class JumpingInPlace(TaskJumping):
 
 
 class JumpingForwardHeight(TaskJumping):
-
     def __init__(self):
         super().__init__()
         self._max_height_task = 0.5
@@ -234,7 +233,7 @@ class JumpingForwardHeight(TaskJumping):
             max_height_normalized = 1.0
         else:
             max_height_normalized = self._relative_max_height / max_height
-        
+
         max_distance = self._max_forward_distance_task
         if self._max_forward_distance > self._max_forward_distance_task:
             max_fwd_distance_normalized = 1.0

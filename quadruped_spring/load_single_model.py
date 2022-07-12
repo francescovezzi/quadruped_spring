@@ -5,10 +5,10 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 os.sys.path.insert(0, currentdir)
 
 from importlib import import_module
-from matplotlib import pyplot as plt
-import numpy as np
 
+import numpy as np
 import yaml
+from matplotlib import pyplot as plt
 from sb3_contrib import ARS
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.utils import set_random_seed
@@ -80,7 +80,7 @@ model_dir = os.path.join(currentdir, aux_dir, LEARNING_ALG, f"{ENV_ID}_{ID}")
 model_file = os.path.join(model_dir, MODEL)
 args_file = os.path.join(model_dir, ENV_ID, "args.yml")
 stats_file = os.path.join(model_dir, ENV_ID, "vecnormalize.pkl")
-plot_dir = os.path.join(LOG_DIR, 'plots')
+plot_dir = os.path.join(LOG_DIR, "plots")
 
 # Load env kwargs
 env_kwargs = {}
@@ -140,13 +140,13 @@ if PRINT_PHI:
     weights = [model.predict([phi]) for phi in phi_list_normalized]
     weights = [env.env_method("scale_weights", weight, indices=0)[0] for weight in weights]
     fig, axes = plt.subplots(3, 1, sharex=True)
-    fig.suptitle(r'ensemble functions')
-    y_labels = [r'w0', r'w1', r'w2']
+    fig.suptitle(r"ensemble functions")
+    y_labels = [r"w0", r"w1", r"w2"]
     for i, ax in enumerate(axes):
         ax.plot(phi_list, weights[:, i])
-        ax.set_xlabel(r'$\phi$')
+        ax.set_xlabel(r"$\phi$")
         ax.set_ylabel(y_labels[i])
-    fig.savefig(os.path.join(plot_dir, f'{ENV_ID}_{ID}'), 'weights')
+    fig.savefig(os.path.join(plot_dir, f"{ENV_ID}_{ID}"), "weights")
 
 env_randomizer = env.env_method("get_randomizer_mode", indices=0)[0]
 print("\n")

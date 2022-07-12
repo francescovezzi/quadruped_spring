@@ -6,21 +6,20 @@ import numpy as np
 import yaml
 from sb3_contrib import ARS
 from stable_baselines3.common.env_util import make_vec_env
-from stable_baselines3.common.vec_env import VecNormalize
 from stable_baselines3.common.utils import set_random_seed
+from stable_baselines3.common.vec_env import VecNormalize
 
 from quadruped_spring.env.sensors.robot_sensors import SensorList
 from quadruped_spring.env.sensors.sensor_collection import SensorCollection
 from quadruped_spring.env.wrappers.obs_flattening_wrapper import ObsFlatteningWrapper
 
-
 ENV = "QuadrupedSpring-v0"
 MODEL = "best_model"
 
 
-class Agent():
+class Agent:
     """Define the single agent."""
-    
+
     def __init__(self, expert_folder):
         self.expert_folder = expert_folder
         self.model_name = os.path.join(expert_folder, MODEL)
@@ -38,7 +37,7 @@ class Agent():
             return env_kwargs
         else:
             raise RuntimeError(f"{args_path} file not found.")
-        
+
     def load_env(self):
         stats_file = os.path.join(self.expert_folder, f"{ENV}/vecnormalize.pkl")
         env_kwargs = self.load_env_kwargs()
@@ -48,10 +47,10 @@ class Agent():
         env.training = False  # do not update stats at test time
         env.norm_reward = False  # reward normalization is not needed at test time
         return env
-    
+
     def get_obs_mode(self):
-        return self.env.env_method('get_observation_mode', indices=0)[0]
-    
+        return self.env.env_method("get_observation_mode", indices=0)[0]
+
     def load_model(self):
         custom_objects = {
             "learning_rate": 0.0,
@@ -61,32 +60,31 @@ class Agent():
         }
         model = ARS.load(self.model_name, self.env, custom_objects=custom_objects)
         return model
-        
+
     def get_prediction(self, obs):
         return self.model.predict(obs)
-    
 
-class AgentList():
-    
+
+class AgentList:
     def __init__(self, agents_folder):
         self.agents_folder = agents_folder
         self.agent_list = []
         self.fill_agent_list()
-        
+
     def get_experts_number(self):
         return len(self.agent_list)
-        
+
     def fill_agent_list(self):
-        for agent_folder in glob.glob(os.path.join(self.agents_folder, '*')):
+        for agent_folder in glob.glob(os.path.join(self.agents_folder, "*")):
             agent = Agent(agent_folder)
             self.agent_list.append(agent)
-            
+
     def get_agents_observation_mode(self):
         obs_mode_list = []
         for agent in self.agent_list:
             obs_mode_list.append(agent.get_obs_mode())
         if obs_mode_list.count(obs_mode_list[0]) != len(obs_mode_list):
-            raise RuntimeError('agents are using different sensors.')
+            raise RuntimeError("agents are using different sensors.")
         else:
             return obs_mode_list[0]
 
@@ -103,8 +101,7 @@ class MoEWrapper(gym.Wrapper):
         self.bypass_experts = False
         self.env.reinit_sensors(self)
         self.update_phi_desired_info()
-    
-    
+
     def get_experts_number(self):
         return len(self.experts)
 
@@ -118,7 +115,7 @@ class MoEWrapper(gym.Wrapper):
 
     def normalize_phi(self, phi):
         return (phi - self._phi_des_mean) / self._phi_des_std
-    
+
     def get_phi_range(self):
         return self._phi_des_min, self._phi_des_max
 

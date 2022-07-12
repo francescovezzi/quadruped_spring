@@ -62,7 +62,7 @@ def build_env(enable_springs=False):
         "task_env": "JUMPING_IN_PLACE",
         "enable_env_randomization": False,
         "env_randomizer_mode": "DISTURBANCE_RANDOMIZER",
-        "observation_space_mode": "ARS_HEIGHT"
+        "observation_space_mode": "ARS_HEIGHT",
     }
     if fill_line:
         env_config["render"] = False
