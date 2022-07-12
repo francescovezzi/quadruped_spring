@@ -1,4 +1,5 @@
 import gym
+import numpy as np
 from stable_baselines3.common.env_util import is_wrapped
 
 from quadruped_spring.env.wrappers.moe_wrapper import MoEWrapper
@@ -12,12 +13,13 @@ class LandingWrapper(gym.Wrapper):
     It's recommended to use this one as the last one.
     """
 
-    def __init__(self, env):
+    def __init__(self, env, step_interval=5):
         super().__init__(env)
         self._robot_config = self.env.get_robot_config()
         self._landing_action = self.env.get_landing_action()
         self.timer_jumping = Timer(dt=self.env.get_env_time_step())
         self.is_moe_wrapped = is_wrapped(self, MoEWrapper)
+        self.env.landing_callback = LandingCallback(self.env, step_interval)
 
     def temporary_switch_motor_control_gain(foo):
         def wrapper(self, *args, **kwargs):
@@ -41,6 +43,7 @@ class LandingWrapper(gym.Wrapper):
 
     @temporary_switch_motor_control_gain
     def landing_phase(self):
+        self.env.landing_callback.activate()
         action = self._landing_action
         done = False
         while not done:
@@ -81,4 +84,45 @@ class LandingWrapper(gym.Wrapper):
         obs = self.env.reset()
         if self.is_moe_wrapped:
             self.set_bypass_experts(False)
+        self.env.landing_callback.reset()
         return obs
+
+
+class LandingCallback():
+    def __init__(self, env, step_interval = 5):
+        self._env = env
+        self.step_interval = step_interval  # It means (1000 / 5) -> 200 Hz
+        self.torque_dim = self._env.get_robot_config().NUM_MOTORS  # 12
+        self.desired_torques = np.zeros(self.torque_dim)
+        
+    def reset(self):
+        self.callback_step = self.do_nothing
+        self.counter = 0
+        self.robot = self._env.robot
+        
+    def activate(self):
+        self.callback_step = self._callback_step
+    
+    def deactivate(self):
+        self.callback_step = self.do_nothing
+        self.counter = 0
+        
+    def _compute_torques(self):
+        # raise RuntimeError('Please implement me :(')
+        return np.zeros(12)
+    
+    def compute_torques(self):
+        if self.counter % self.step_interval == 0:
+            self.desired_torques = self._compute_torques()
+        return self.desired_torques
+    
+    @staticmethod
+    def do_nothing():
+        pass
+
+    def _callback_step(self):
+        des_torques = self.compute_torques()
+        self.robot.apply_external_torque(des_torques)
+        self.counter += 1
+
+

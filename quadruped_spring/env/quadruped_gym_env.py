@@ -167,6 +167,8 @@ class QuadrupedGymEnv(gym.Env):
             self._env_randomizer_mode = env_randomizer_mode
             self._env_randomizers = EnvRandomizerList(EnvRandomizerCollection().get_el(self._env_randomizer_mode))
             self._env_randomizers._init(self)
+        
+        self.landing_callback = None
 
         self.reset()
         if self.verbose > 0:
@@ -234,11 +236,13 @@ class QuadrupedGymEnv(gym.Env):
         self.step_simulation()
 
     def step_simulation(self, increase_sim_counter=True):
+        if self.landing_callback is not None:
+            self.landing_callback()
         self._pybullet_client.stepSimulation()
         if increase_sim_counter:
             self._sim_step_counter += 1
         if self._is_render:
-            self._render_step_helper()
+            self._render_step_helper()        
 
     def step(self, action):
         """Step forward the simulation, given the action."""

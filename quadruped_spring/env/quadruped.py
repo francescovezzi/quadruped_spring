@@ -338,6 +338,19 @@ class Quadruped(object):
         pos = [0, 0, 0]
         self._pybullet_client.applyExternalForce(quad_id, trunk_id, force, pos, self._pybullet_client.LINK_FRAME)
 
+    def apply_external_torque(self, desired_torque):
+        """Apply an external torque on quadruped joints."""
+        self._applied_motor_torque = np.multiply(desired_torque, self._motor_direction)
+
+        for motor_id, motor_torque, motor_enabled in zip(
+                self._motor_id_list, self._applied_motor_torque, self._motor_enabled_list
+            ):
+                if motor_enabled:
+                    self._SetMotorTorqueById(motor_id, motor_torque)
+                else:
+                    self._SetMotorTorqueById(motor_id, 0)
+
+
     ######################################################################################
     # Jacobian, IK, etc.
     ######################################################################################
