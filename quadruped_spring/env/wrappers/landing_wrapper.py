@@ -96,16 +96,16 @@ class LandingCallback():
         self.desired_torques = np.zeros(self.torque_dim)
         
     def reset(self):
-        self.callback_step = self.do_nothing
+        self.enable_callback = False
         self.counter = 0
         self.robot = self._env.robot
         
     def activate(self):
-        self.callback_step = self._callback_step
+        self.enable_callback = True
     
     def deactivate(self):
-        self.callback_step = self.do_nothing
-        self.counter = 0
+        self.enable_callback = False
+        self.counter = 0  # Maybe irrelevant
         
     def _compute_torques(self):
         # raise RuntimeError('Please implement me :(')
@@ -115,14 +115,12 @@ class LandingCallback():
         if self.counter % self.step_interval == 0:
             self.desired_torques = self._compute_torques()
         return self.desired_torques
-    
-    @staticmethod
-    def do_nothing():
-        pass
 
     def _callback_step(self):
         des_torques = self.compute_torques()
         self.robot.apply_external_torque(des_torques)
         self.counter += 1
 
-
+    def callback_step(self):
+        if self.enable_callback:
+            self._callback_step()
