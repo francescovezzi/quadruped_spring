@@ -19,7 +19,7 @@ class LandingWrapper(gym.Wrapper):
         self._landing_action = self.env.get_landing_action()
         self.timer_jumping = Timer(dt=self.env.get_env_time_step())
         self.is_moe_wrapped = is_wrapped(self, MoEWrapper)
-        self.env.landing_callback = LandingCallback(self.env, step_interval)
+        self.env.set_landing_callback(LandingCallback(self.env, step_interval))
 
     def temporary_switch_motor_control_gain(foo):
         def wrapper(self, *args, **kwargs):
@@ -71,20 +71,13 @@ class LandingWrapper(gym.Wrapper):
         if self.env.task.is_switched_controller() and not done:
             _, reward, done, infos = self.take_off_phase(action)
             if not done:
-                if self.is_moe_wrapped:
-                    self.set_bypass_experts(True)
                 _, reward, done, infos = self.landing_phase()
-
-        if done and self.is_moe_wrapped:
-            self.set_bypass_experts(False)
 
         return obs, reward, done, infos
 
     def reset(self):
-        obs = self.env.reset()
-        if self.is_moe_wrapped:
-            self.set_bypass_experts(False)
         self.env.landing_callback.reset()
+        obs = self.env.reset()
         return obs
 
 
@@ -94,6 +87,8 @@ class LandingCallback():
         self.step_interval = step_interval  # It means (1000 / 5) -> 200 Hz
         self.torque_dim = self._env.get_robot_config().NUM_MOTORS  # 12
         self.desired_torques = np.zeros(self.torque_dim)
+        self.enable_callback = False
+        self.counter = 0
         
     def reset(self):
         self.enable_callback = False
@@ -106,16 +101,17 @@ class LandingCallback():
     def deactivate(self):
         self.enable_callback = False
         self.counter = 0  # Maybe irrelevant
-        
+    
     def _compute_torques(self):
         # raise RuntimeError('Please implement me :(')
-        return np.zeros(12)
+        
+        return np.ones(12) * 80
     
     def compute_torques(self):
         if self.counter % self.step_interval == 0:
             self.desired_torques = self._compute_torques()
         return self.desired_torques
-
+    
     def _callback_step(self):
         des_torques = self.compute_torques()
         self.robot.apply_external_torque(des_torques)
@@ -124,3 +120,8 @@ class LandingCallback():
     def callback_step(self):
         if self.enable_callback:
             self._callback_step()
+    
+    def is_enabled(self):
+        return self.enable_callback
+            
+    __call__ = callback_step
