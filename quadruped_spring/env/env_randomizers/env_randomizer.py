@@ -1,8 +1,10 @@
-from email.mime import base
+# from email.mime import base
 
 import numpy as np
+# from stable_baselines3.common.env_util import is_wrapped
 
 from quadruped_spring.env.env_randomizers.env_randomizer_base import EnvRandomizerBase
+# from quadruped_spring.env.wrappers.initial_pose_wrapper import InitialPoseWrapper
 from quadruped_spring.utils.timer import Timer
 
 # Relative range.
@@ -13,6 +15,7 @@ MAX_SETTLING_ACTION_DISTURBANCE = (0.05, 0.04, 0.03)  # Hip, thigh, calf
 # Values used for nominal springs parameters randomization
 SPRING_STIFFNESS_MAX_ERROR_RANGE = (0.1, 0.1, 0.1)  # Hip, thigh, calf
 SPRING_DAMPING_MAX_ERROR_RANGE = (0.05, 0.05, 0.05)  # Hip, thigh, calf
+PITCH_ANGLE_RANGE = (0, 10)  # Degrees
 
 # Absolute range.
 MAX_POS_MASS_OFFSET = (0.1, 0.0, 0.05)  # meters
@@ -192,6 +195,27 @@ class EnvRandomizerSprings(EnvRandomizerBase):
     def _randomize_springs(self):
         self._env.robot.set_spring_stiffness(self.get_new_stiffness())
         self._env.robot.set_spring_damping(self.get_new_damping())
+
+
+class EnvRandomizerPitch(EnvRandomizerBase):
+    """Add some noise in the settling robot configuration."""
+
+    def __init__(
+        self,
+        env,
+        max_disturbe=PITCH_ANGLE_RANGE,
+    ):
+        self._env = env
+        self._aci = self._env._ac_interface
+        self._min_pitch_angle, self._max_pitch_angle = max_disturbe
+
+    # def randomize_env(self):
+        # self.is_pitch_wrapped = is_wrapped(self._env, InitialPoseWrapper)
+    #     if self.is_pitch_wrapped:
+    #         sample_pitch_angle = np.random.uniform(low=self._min_pitch_angle, high=self._max_pitch_angle)
+    #         self._env.set_phi_desired(sample_pitch_angle)
+    #     else:
+    #         pass
 
 
 class Disturbe:

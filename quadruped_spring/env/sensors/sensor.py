@@ -4,8 +4,9 @@ import numpy as np
 class Sensor:
     """A prototype class for a generic sensor"""
 
-    def __init__(self):
+    def __init__(self, env):
         self._data = None
+        self._env = env
         self._robot = None
         self._name = "please give me a name"
 
@@ -44,7 +45,11 @@ class Sensor:
 
     def _read_dirty_data(self):
         """Get Sensor data with noise"""
-        return self._data + self._add_obs_noise
+        # print(self._data + self._add_obs_noise)
+        if np.all(self._noise_std > 0):
+            return self._data + self._add_obs_noise
+        else:
+            return self._data
 
     def _on_step(self):
         """Callback for step method"""
@@ -53,3 +58,7 @@ class Sensor:
     def _get_data(self):
         """Get sensor data"""
         pass
+
+    def _update_env(self, env):
+        """Update the environment reference"""
+        self._env = env

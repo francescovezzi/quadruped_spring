@@ -20,7 +20,7 @@ NUM_LEGS = 4
 MOTORS_PER_LEG = 3
 
 INIT_RACK_POSITION = [0, 0, 1]  # when hung up in air (for debugging)
-INIT_POSITION = [0, 0, 0.5]  # normal initial height
+INIT_POSITION = [0, 0, 0.32]  # normal initial height
 IS_FALLEN_HEIGHT = 0.12  # height at which robot is considered fallen
 
 INIT_ORIENTATION = (0, 0, 0, 1)
@@ -33,7 +33,8 @@ DEFAULT_CALF_ANGLE = -np.pi / 2
 
 INIT_JOINT_ANGLES = np.array([DEFAULT_HIP_ANGLE, DEFAULT_THIGH_ANGLE, DEFAULT_CALF_ANGLE] * NUM_LEGS)
 INIT_MOTOR_ANGLES = INIT_JOINT_ANGLES
-ANGLE_LANDING_POSE = np.array([0.0, 1.0, -1.9] * NUM_LEGS)
+# ANGLE_LANDING_POSE = np.array([0.0, 1.0, -1.9] * NUM_LEGS)
+ANGLE_LANDING_POSE = INIT_MOTOR_ANGLES
 ANGLE_SETTLING_POSE = np.array([0.0, 1.14, -2.19] * NUM_LEGS)
 
 # Used to convert the robot SDK joint angles to URDF joint angles.
@@ -51,6 +52,9 @@ JOINT_OFFSETS = np.array([HIP_JOINT_OFFSET, THIGH_JOINT_OFFSET, CALF_JOINT_OFFSE
 HIP_LINK_LENGTH = 0.0847
 THIGH_LINK_LENGTH = 0.213
 CALF_LINK_LENGTH = 0.213
+
+X_OFFSET = 0.1881
+Y_OFFSET = 0.04675
 
 # default foot pos in leg frame
 DEFAULT_X = 0
@@ -99,6 +103,9 @@ MOTOR_KD = [1.0, 2.0, 2.0] * NUM_LEGS
 
 MOTOR_KP = [55, 55, 55] * NUM_LEGS
 MOTOR_KD = [0.8, 0.8, 0.8] * NUM_LEGS
+
+MOTOR_KP = [55, 60, 60] * NUM_LEGS
+MOTOR_KD = [0.8, 1.0, 1.0] * NUM_LEGS
 
 # Sample Cartesian Gains
 kpCartesian = np.diag([500, 500, 500])
@@ -171,6 +178,7 @@ PITCH_RATE_HIGH = np.array([5.0])
 HEIGHT_LOW = np.array([0.1])
 VEL_LIN_LOW = -VEL_LIN_HIGH
 VEL_ANG_LOW = -VEL_ANG_HIGH
+ORIENT_RPY_LOW = -ORIENT_RPY_HIGH
 IMU_LOW = -IMU_HIGH
 JOINT_ANGLES_LOW = RL_LOWER_ANGLE_JOINT
 JOINT_VELOCITIES_LOW = -JOINT_VELOCITIES_HIGH

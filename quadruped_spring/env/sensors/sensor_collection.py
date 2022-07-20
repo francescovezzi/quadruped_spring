@@ -15,11 +15,10 @@ class SensorCollection(CollectionBase):
 
     def __init__(self):
         super().__init__()
-        self._DEFAULT = [rs.IMU, rs.FeetPostion, rs.FeetVelocity, rs.GroundReactionForce]
-        self._ENCODER = [rs.IMU, rs.JointPosition, rs.JointVelocity, rs.GroundReactionForce]
+        self._ENCODER = [rs.JointPosition, rs.JointVelocity]
         self._ENCODER_2 = [rs.LinearVelocity, rs.AngularVelocity, rs.JointPosition, rs.JointVelocity]
-        self._CARTESIAN_NO_IMU = [rs.FeetPostion, rs.FeetVelocity, rs.GroundReactionForce]
-        self._ANGLE_NO_IMU = [rs.JointPosition, rs.JointVelocity, rs.GroundReactionForce]
+        self._CARTESIAN_NO_IMU = [rs.FeetPostion, rs.FeetVelocity]
+        self._ANGLE_NO_IMU = [rs.JointPosition, rs.JointVelocity]
         self._CUSTOM_3D = [
             rs.Quaternion,
             rs.DesiredBaseLinearVelocityXZ,
@@ -44,15 +43,29 @@ class SensorCollection(CollectionBase):
             rs.JointVelocity,
         ]
         self._ARS_HEIGHT = [
+            rs.JointPosition,
+            rs.JointVelocity,
             rs.Pitch,
             rs.PitchRate,
             rs.LinearVelocity2D,
-            rs.JointPosition,
-            rs.JointVelocity,
             rs.Height,
         ]
+        self._ARS_CONTACT = [
+            rs.JointPosition,
+            rs.JointVelocity,
+            rs.Pitch,
+            rs.HeightGround,
+            rs.BooleanContact,
+        ]
+        self._ARS_BASIC = [
+            rs.JointPosition,
+            rs.JointVelocity,
+            rs.Pitch,
+            rs.Height,
+            rs.BaseHeightVelocity,
+        ]
+        self._PHI = [rs.InitialPhiDesired]
         self._dict = {
-            "DEFAULT": self._DEFAULT,
             "ENCODER": self._ENCODER,
             "ENCODER_2": self._ENCODER_2,
             "CARTESIAN_NO_IMU": self._CARTESIAN_NO_IMU,
@@ -61,5 +74,8 @@ class SensorCollection(CollectionBase):
             "CUSTOM_2D": self._CUSTOM_2D,
             "ARS": self._ARS,
             "ARS_HEIGHT": self._ARS_HEIGHT,
+            "ARS_CONTACT": self._ARS_CONTACT,
+            "ARS_BASIC": self._ARS_BASIC,
+            "PHI_DES": self._PHI,
         }
         self._element_type = "sensor package"

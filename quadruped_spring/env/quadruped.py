@@ -338,15 +338,27 @@ class Quadruped(object):
         pos = [0, 0, 0]
         self._pybullet_client.applyExternalForce(quad_id, trunk_id, force, pos, self._pybullet_client.LINK_FRAME)
 
+    def apply_external_torque(self, desired_torque):
+        """Apply an external torque on quadruped joints."""
+        self._applied_motor_torque = np.multiply(desired_torque, self._motor_direction)
+
+        for motor_id, motor_torque, motor_enabled in zip(
+            self._motor_id_list, self._applied_motor_torque, self._motor_enabled_list
+        ):
+            if motor_enabled:
+                self._SetMotorTorqueById(motor_id, motor_torque)
+            else:
+                self._SetMotorTorqueById(motor_id, 0)
+
     ######################################################################################
     # Jacobian, IK, etc.
     ######################################################################################
-    def ComputeJacobianAndPosition(self, legID):
+    def _compute_jacobian_and_position(self, q, legID):
         """Get Jacobian and foot position of leg legID.
         Leg 0: FR; Leg 1: FL; Leg 2: RR ; Leg 3: RL;
         """
-        # joint positions of leg legID
-        q = self.GetMotorAngles()[legID * 3 : legID * 3 + 3]
+
+        q = q[legID * 3 : legID * 3 + 3]
 
         # rename links
         l1 = self._robot_config.HIP_LINK_LENGTH
@@ -386,6 +398,11 @@ class Quadruped(object):
         pos[2] = l1 * sideSign * s1 - l3 * (c1 * c23) - l2 * c1 * c2
 
         return J, pos
+
+    def ComputeJacobianAndPosition(self, legID):
+        # joint positions of leg legID
+        q = self.GetMotorAngles()
+        return self._compute_jacobian_and_position(q, legID)
 
     def ComputeInverseKinematics(self, legID, xyz_coord):
         """Get joint angles for leg legID with desired xyz position in leg frame.
@@ -796,12 +813,11 @@ class Quadruped(object):
         # disable self collision between box and each link
         for i in range(-1, self._pybullet_client.getNumJoints(quad_ID)):
             self._pybullet_client.setCollisionFilterPair(quad_ID, base_block_ID, i, -1, 0)
-    
-    def getFootPositionAndVelocity(self,foot_id):
-        foot_pos = self._pybullet_client.getLinkState(self.quadruped,foot_id, computeLinkVelocity=1)[0]
-        foot_vel = self._pybullet_client.getLinkState(self.quadruped,foot_id, computeLinkVelocity=1)[6]
-        return foot_pos,foot_vel
+
+    def getFootPositionAndVelocity(self, foot_id):
+        foot_pos = self._pybullet_client.getLinkState(self.quadruped, foot_id, computeLinkVelocity=1)[0]
+        foot_vel = self._pybullet_client.getLinkState(self.quadruped, foot_id, computeLinkVelocity=1)[6]
+        return foot_pos, foot_vel
 
     def getFootIndices(self):
         return self._foot_link_ids
-

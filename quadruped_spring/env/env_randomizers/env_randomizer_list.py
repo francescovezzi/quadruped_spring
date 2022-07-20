@@ -29,3 +29,9 @@ class EnvRandomizerList:
         """
         for env_rand in self._list:
             env_rand.randomize_robot()
+
+    def _reinit(self, env):
+        """Update the environment object to randomize wrappers variables."""
+        self._env = env
+        for env_rand in self._list:
+            env_rand._env = self._env

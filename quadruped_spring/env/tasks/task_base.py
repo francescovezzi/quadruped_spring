@@ -46,11 +46,11 @@ class TaskBase:
 
     def _reward(self):
         """Return the reward funciton"""
-        pass
+        return 0
 
-    def _reward_end_episode(self, reward):
+    def _reward_end_episode(self, reward=0):
         """add bonus and malus to the actual reward at the end of the episode"""
-        pass
+        return reward
 
     def _terminated(self):
         """return boolean specifying whether episode is terminated"""
@@ -83,8 +83,8 @@ class TaskJumping(TaskBase):
 
     def _reset(self, env):
         super()._reset(env)
-        self._reset_params()
         self._env._last_action = self._env._ac_interface._load_springs(self._intermediate_settling_parameter_task)
+        self._reset_params()
         self._jump_counter = 0
         self._switched_controller = False
 

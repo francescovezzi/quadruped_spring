@@ -59,12 +59,11 @@ def build_env(enable_springs=False):
         "action_repeat": 10,
         "record_video": False,
         "action_space_mode": "DEFAULT",
-        "task_env": "JUMPING_ON_PLACE_HEIGHT",
+        "task_env": "JUMPING_IN_PLACE",
         "enable_env_randomization": False,
         "env_randomizer_mode": "DISTURBANCE_RANDOMIZER",
-        "preload_springs": True,
+        "observation_space_mode": "ARS_HEIGHT",
     }
-    env_config["enable_springs"] = True
     if fill_line:
         env_config["render"] = False
     env = QuadrupedGymEnv(**env_config)

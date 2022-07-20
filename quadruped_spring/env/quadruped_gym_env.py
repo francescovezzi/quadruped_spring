@@ -3,16 +3,29 @@ import datetime
 import os
 import time
 
+#
+# Landing controller
+from pathlib import Path
+
+import cvxpy as cp
+
 # gym
 import gym
 import numpy as np
+import pinocchio as pin
 
 # pybullet
 import pybullet
 import pybullet_data
 import pybullet_utils.bullet_client as bc
 from gym import spaces
-from gym.utils import seeding
+# from gym.utils import seeding
+from pinocchio.explog import log
+from pinocchio.robot_wrapper import RobotWrapper
+from pinocchio.utils import *
+from scipy.spatial.transform import Rotation as R
+# from stable_baselines3.common.env_util import is_wrapped
+# from stable_baselines3.common.utils import set_random_seed
 
 import quadruped_spring.go1.configs_go1_with_springs as go1_config_with_springs
 import quadruped_spring.go1.configs_go1_without_springs as go1_config_without_springs
@@ -24,21 +37,10 @@ from quadruped_spring.env.env_randomizers.env_randomizer_list import EnvRandomiz
 from quadruped_spring.env.sensors.robot_sensors import SensorList
 from quadruped_spring.env.sensors.sensor_collection import SensorCollection
 from quadruped_spring.env.tasks.task_collection import TaskCollection
+
+from quadruped_spring.env.wrappers.landing_wrapper import LandingCallback, LandingWrapper
 from quadruped_spring.env.wrappers.obs_flattening_wrapper import ObsFlatteningWrapper
 from quadruped_spring.utils import action_filter
-#
-# Landing controller
-from pathlib import Path
-import pinocchio as pin
-from pinocchio.explog import log
-from pinocchio.robot_wrapper import RobotWrapper
-from pinocchio.utils import *
-import cvxpy as cp
-from scipy.spatial.transform import Rotation as R
-from os.path import dirname, join, abspath
-
-# from quadruped_spring.env.wrappers.rest_wrapper import RestWrapper
-# from quadruped_spring.env.wrappers.landing_wrapper import LandingWrapper
 
 ACTION_EPS = 0.01
 OBSERVATION_EPS = 0.01
@@ -54,7 +56,6 @@ VIDEO_LOG_DIRECTORY = "videos/" + datetime.datetime.now().strftime("vid-%Y-%m-%d
 
 # NOTE:
 # TORQUE control mode actually works only if isRLGymInterface is setted to False.
-
 
 
 class QuadrupedGymEnv(gym.Env):
@@ -74,9 +75,9 @@ class QuadrupedGymEnv(gym.Env):
         time_step=0.001,
         action_repeat=10,
         motor_control_mode="PD",
-        task_env="JUMPING_ON_PLACE_HEIGHT",
-        observation_space_mode="DEFAULT",
-        action_space_mode="DEFAULT",
+        task_env="JUMPING_IN_PLACE",
+        observation_space_mode="ARS_CONTACT",
+        action_space_mode="SYMMETRIC",
         on_rack=False,
         render=False,
         record_video=False,
@@ -84,9 +85,10 @@ class QuadrupedGymEnv(gym.Env):
         enable_springs=False,
         enable_action_interpolation=False,
         enable_action_filter=False,
-        enable_env_randomization=True,
+        enable_env_randomization=False,
         env_randomizer_mode="MASS_RANDOMIZER",
         curriculum_level=0.0,
+        verbose=0,
     ):
         """Initialize the quadruped gym environment.
 
@@ -119,7 +121,8 @@ class QuadrupedGymEnv(gym.Env):
           env_randomizer_mode: String specifying which env randomizers to use.
           curriculum_level: Scalar in [0,1] specyfing the task difficulty level.
         """
-        self.seed()
+
+        self.verbose = verbose
         self.pinocchio_model = self.setupPinocchio()
 
         self._enable_springs = enable_springs
@@ -148,12 +151,12 @@ class QuadrupedGymEnv(gym.Env):
         self._settling_steps = 1500
 
         self._build_action_command_interface(motor_control_mode, action_space_mode)
-        self.setupActionSpace()
+        self._action_dim = self.get_action_interface_dim()
+        self.setupActionSpace(self._action_dim)
 
         self._observation_space_mode = observation_space_mode
-        self._robot_sensors = SensorList(SensorCollection().get_el(self._observation_space_mode))
+        self._robot_sensors = SensorList(SensorCollection().get_el(self._observation_space_mode), self)
         self.setupObservationSpace()
-
         self.task_env = task_env
         self.task = TaskCollection().get_el(self.task_env)()
         self.task.set_curriculum_level(curriculum_level, verbose=0)
@@ -174,7 +177,11 @@ class QuadrupedGymEnv(gym.Env):
             self._env_randomizers = EnvRandomizerList(EnvRandomizerCollection().get_el(self._env_randomizer_mode))
             self._env_randomizers._init(self)
 
+        self.landing_callback = None
+
         self.reset()
+        if self.verbose > 0:
+            self.print_info()
 
     ######################################################################################
     # RL Observation and Action spaces
@@ -185,29 +192,27 @@ class QuadrupedGymEnv(gym.Env):
         ##########for robot with float-base ################################
         Freebase = True
 
-
         mesh_dir = str(Path(__file__).parent.absolute())
-        print("mesh_dir:",mesh_dir)
+        print("mesh_dir:", mesh_dir)
 
         # You should change here to set up your own URDF file
         if Full_body_simu:
             # urdf_filename = mesh_dir + '/go1_description/urdf/go1_full_no_grippers.urdf'
-            urdf_filename = mesh_dir + '/go1_description/urdf/go1_origin.urdf'
+            urdf_filename = mesh_dir + "/go1_description/urdf/go1_origin.urdf"
         else:
-            urdf_filename = mesh_dir + '/go1_description/urdf/go1_origin.urdf'
+            urdf_filename = mesh_dir + "/go1_description/urdf/go1_origin.urdf"
 
         ### pinocchio load urdf
         if Freebase:
-            robot =  RobotWrapper.BuildFromURDF(urdf_filename, mesh_dir, pin.JointModelFreeFlyer())
+            robot = RobotWrapper.BuildFromURDF(urdf_filename, mesh_dir, pin.JointModelFreeFlyer())
             # addFreeFlyerJointLimits(robot)
         else:
             robot = RobotWrapper.BuildFromURDF(urdf_filename, mesh_dir)
 
         return robot
 
-
     def setupObservationSpace(self):
-        self._robot_sensors._init(robot_config=self._robot_config)
+        self._robot_sensors._init(self.get_robot_config())
         obs_high = self._robot_sensors._get_high_limits() + OBSERVATION_EPS
         obs_low = self._robot_sensors._get_low_limits() - OBSERVATION_EPS
         self.observation_space = spaces.Box(obs_low, obs_high, dtype=np.float32)
@@ -225,12 +230,10 @@ class QuadrupedGymEnv(gym.Env):
         self._motor_control_mode = motor_control_mode
         self._action_space_mode = action_space_mode
 
-    def setupActionSpace(self):
+    def setupActionSpace(self, action_dim):
         """Set up action space for RL."""
-        self._action_dim = self.get_action_dim()
-        action_high = np.array([1] * self._action_dim)
+        action_high = np.array([1] * action_dim)
         self.action_space = spaces.Box(-action_high, action_high, dtype=np.float32)
-        self._last_action = np.zeros(self._action_dim)
 
     ######################################################################################
     # Step simulation, map policy network actions to joint commands, etc.
@@ -263,14 +266,16 @@ class QuadrupedGymEnv(gym.Env):
             proc_action = action
 
         # ADD LANDING CONTROLLER HERE:
-        torque_ff = self.landingController()
-        print(torque_ff)
+        # torque_ff = self.landingController()
+        # print(torque_ff)
         self.robot.ApplyAction(proc_action)
         if self._enable_env_randomization:
             self._env_randomizers.randomize_step()
         self.step_simulation()
 
     def step_simulation(self, increase_sim_counter=True):
+        if self.landing_callback is not None:
+            self.landing_callback()
         self._pybullet_client.stepSimulation()
         if increase_sim_counter:
             self._sim_step_counter += 1
@@ -314,7 +319,7 @@ class QuadrupedGymEnv(gym.Env):
     ###################################################
     def _build_action_filter(self):
         sampling_rate = 1 / self._env_time_step
-        num_joints = self._action_dim
+        num_joints = self.get_action_interface_dim()
         a_filter = action_filter.ActionFilterButter(sampling_rate=sampling_rate, num_joints=num_joints)
         # if self._enable_springs:
         #     a_filter.highcut = 2.5
@@ -340,7 +345,7 @@ class QuadrupedGymEnv(gym.Env):
 
         self._env_step_counter = 0
         self._sim_step_counter = 0
-
+        self._last_action = np.zeros(self.get_action_interface_dim())
         self._ac_interface._reset(self.robot)
         if self._enable_env_randomization:
             self._env_randomizers.randomize_env()
@@ -441,9 +446,9 @@ class QuadrupedGymEnv(gym.Env):
     def configure(self, args):
         self._args = args
 
-    def seed(self, seed=None):
-        self.np_random, seed = seeding.np_random(seed)
-        return [seed]
+    # def seed(self, seed=None):
+        # self.np_random, seed = seeding.np_random(seed)
+        # return [seed]
 
     def _render_step_helper(self):
         """Helper to configure the visualizer camera during step()."""
@@ -513,11 +518,15 @@ class QuadrupedGymEnv(gym.Env):
     ########################################################
     # Get methods
     ########################################################
-    def get_action_dim(self):
+    def get_action_interface_dim(self):
         return self._ac_interface.get_action_space_dim()
+
+    def get_action_dim(self):
+        return self._action_dim
 
     def get_observation(self):
         return self._robot_sensors.get_noisy_obs()
+        # return self._robot_sensors.get_obs()
 
     def get_sim_time(self):
         """Get current simulation time."""
@@ -565,6 +574,10 @@ class QuadrupedGymEnv(gym.Env):
         """Get the last action applied."""
         return self._last_action
 
+    def get_observation_space_mode(self):
+        """Get the observation space mode."""
+        return self._observation_space_mode
+
     def print_task_info(self):
         """Print some info about the task performed."""
         self.task.print_info()
@@ -584,6 +597,18 @@ class QuadrupedGymEnv(gym.Env):
         else:
             return "noone"
 
+    def reinit_randomizers(self, env):
+        """Reinitialize randomizers."""
+        self._env_randomizers._reinit(env)
+
+    def reinit_sensors(self, env):
+        """Reinitialize sensors."""
+        self._robot_sensors._reinit(env)
+
+    def get_ac_interface(self):
+        """Return the action control interface."""
+        return self._ac_interface
+
     def increase_curriculum_level(self, value):
         """increase the curriculum level."""
         assert value >= 0 and value < 1, "curriculum level change should be in [0,1)."
@@ -593,6 +618,21 @@ class QuadrupedGymEnv(gym.Env):
         """Print curriculum info."""
         self.task.print_curriculum_info()
 
+    def set_landing_callback(self, callback):
+        """Set the landing callback."""
+        self.landing_callback = callback
+
+    def print_info(self):
+        """Print environment info."""
+        print("\n*** Environment Info ***")
+        print(f"task environment -> {self.task_env}")
+        print(f"spring enabled -> {self._enable_springs}")
+        print(f"curriculum level -> {self.get_curriculum_level()}")
+        print(f"sensors -> {self._observation_space_mode}")
+        if self._enable_env_randomization:
+            print(f"env randomizer -> {self._env_randomizer_mode}")
+        print("")
+
     # Landing controller
     def landingController(self):
         ############# Landing Controller ###################################
@@ -600,27 +640,26 @@ class QuadrupedGymEnv(gym.Env):
 
         # Get foot positions (relative to CoM) and Jacobian:
         foot_indices = self.robot.getFootIndices()
-        foot_poses = np.zeros([4,3])
-        foot_vels = np.zeros([4,3])
+        foot_poses = np.zeros([4, 3])
+        foot_vels = np.zeros([4, 3])
         base_pos = self.robot.GetBasePosition()
         base_vel = self.robot.GetBaseLinearVelocity()
         J_leg = np.zeros((4, 3, 3))
         for i in range(4):
-            
-            foot_poses[i,:] = np.array(self.robot.getFootPositionAndVelocity(foot_indices[i])[0]) - base_pos
-            foot_vels[i,:] = np.array(self.robot.getFootPositionAndVelocity(foot_indices[i])[1]) - base_vel
-            J_leg[i],_ = self.robot.ComputeJacobianAndPosition(i)
+
+            foot_poses[i, :] = np.array(self.robot.getFootPositionAndVelocity(foot_indices[i])[0]) - base_pos
+            foot_vels[i, :] = np.array(self.robot.getFootPositionAndVelocity(foot_indices[i])[1]) - base_vel
+            J_leg[i], _ = self.robot.ComputeJacobianAndPosition(i)
 
         # Get contact forces:
         F_contact = np.zeros(4)
-        contacts = pybullet.getContactPoints(self.robot.quadruped,self.plane)
+        contacts = pybullet.getContactPoints(self.robot.quadruped, self.plane)
         for contact in contacts:
             if contact[3] in foot_indices:
-                idx = np.where(np.array(foot_indices)==contact[3])[0][0]
+                idx = np.where(np.array(foot_indices) == contact[3])[0][0]
                 F_contact[idx] += contact[9]
 
         print("Contact forces: ", F_contact)
-
 
         # PD gains for position and orientation:
         Kp_p = 20
@@ -628,17 +667,23 @@ class QuadrupedGymEnv(gym.Env):
         Kp_w = 10
         Kd_w = 0.1
 
-        n = 12 # 12 Force components (4 legs * 3 directions)from scipy.spatial.transform import Rotation as R
+        n = 12  # 12 Force components (4 legs * 3 directions)from scipy.spatial.transform import Rotation as R
         arr = [np.eye(3) for i in range(4)]
         A = np.hstack(arr)
-        pos = [np.array([[0, -foot_poses[i,2], foot_poses[i,1]],
-                        [foot_poses[i,2], 0, -foot_poses[i,0]],
-                        [-foot_poses[i,1], foot_poses[i,0], 0]]) for i in range(4)] # SKEW SYMMETRIC MATRIX FROM CROSS PRODUCT
-        A = np.vstack((A,np.hstack(pos)))
+        pos = [
+            np.array(
+                [
+                    [0, -foot_poses[i, 2], foot_poses[i, 1]],
+                    [foot_poses[i, 2], 0, -foot_poses[i, 0]],
+                    [-foot_poses[i, 1], foot_poses[i, 0], 0],
+                ]
+            )
+            for i in range(4)
+        ]  # SKEW SYMMETRIC MATRIX FROM CROSS PRODUCT
+        A = np.vstack((A, np.hstack(pos)))
 
-        grav = np.array([0,0,-9.81])
-        # Compute centroidal inertia matrix using pinnochio 
-    
+        grav = np.array([0, 0, -9.81])
+        # Compute centroidal inertia matrix using pinnochio
 
         base_quat = self.robot.GetBaseOrientation()
         base_vel = self.robot.GetBaseLinearVelocity()
@@ -647,26 +692,25 @@ class QuadrupedGymEnv(gym.Env):
         q_mea = self.robot.GetMotorAngles()
         dq_mea = self.robot.GetMotorVelocities()
 
-        q_pin = np.hstack((np.array(base_pos),base_quat,q_mea))
-        v_pin = np.hstack((np.array(base_vel),np.array(base_ang_vel),dq_mea))
+        q_pin = np.hstack((np.array(base_pos), base_quat, q_mea))
+        v_pin = np.hstack((np.array(base_vel), np.array(base_ang_vel), dq_mea))
 
         pin.ccrba(robot.model, robot.data, q_pin, v_pin)
         Ig = robot.data.Ig.inertia
 
         # Desired base angular velocity, position and linear velocity
         des_base_ang_vel = np.zeros(3)
-        des_base = np.array([base_pos[0],base_pos[1],0.28])
+        des_base = np.array([base_pos[0], base_pos[1], 0.28])
         des_base_vel = np.zeros(3)
 
+        des_base_acc = Kp_p * (des_base - base_pos) + Kd_p * (des_base_vel - base_vel)
 
-        des_base_acc = Kp_p*(des_base - base_pos) + Kd_p*(des_base_vel - base_vel) 
-        
         R_base = R.from_quat(np.array(base_quat)).as_matrix()
         # M_base = pin.SE3(R_base, np.matrix([0, 0, 0]).T).rotation
-        R_base_des = (R.from_quat(np.array([0,0,0,1]))).as_matrix()
+        R_base_des = (R.from_quat(np.array([0, 0, 0, 1]))).as_matrix()
         # M_base_des = pin.SE3(R_base_des, np.matrix([0, 0, 0]).T).rotation
-        des_base_ang_acc = (Kp_w*(pin.log(R_base_des @ R_base.T)) + Kd_w*(des_base_ang_vel - base_ang_vel)) 
-        
+        des_base_ang_acc = Kp_w * (pin.log(R_base_des @ R_base.T)) + Kd_w * (des_base_ang_vel - base_ang_vel)
+
         mass = np.sum(np.array(self.robot.GetTotalMassFromURDF()))
 
         bd = np.hstack((mass * (des_base_acc - grav), Ig @ des_base_ang_acc))
@@ -674,7 +718,7 @@ class QuadrupedGymEnv(gym.Env):
         # print("des_base_acc: ", des_base_acc)
         # print("des_base_ang_acc: ", des_base_ang_acc)
         # Cost matrices
-        S = 12*np.eye(6)
+        S = 12 * np.eye(6)
         alpha = 0.01
         beta = 0.1
         # Define and solve the CVXPY problem.
@@ -686,17 +730,17 @@ class QuadrupedGymEnv(gym.Env):
         constr = []
         for foot in range(4):
             # index [foot*3+2] means Fz of foot X.
-            constr += [0 <= F[foot*3+2], F[foot*3+2] <= Fz_max]
-            constr += [-frict_coeff*F[foot*3+2] <= F[foot*3], F[foot*3] <= frict_coeff*F[foot*3+2]]
-            constr += [-frict_coeff*F[foot*3+2] <= F[foot*3+1], F[foot*3+1] <= frict_coeff*F[foot*3+2]]
+            constr += [0 <= F[foot * 3 + 2], F[foot * 3 + 2] <= Fz_max]
+            constr += [-frict_coeff * F[foot * 3 + 2] <= F[foot * 3], F[foot * 3] <= frict_coeff * F[foot * 3 + 2]]
+            constr += [-frict_coeff * F[foot * 3 + 2] <= F[foot * 3 + 1], F[foot * 3 + 1] <= frict_coeff * F[foot * 3 + 2]]
             ### ADD CONSTRAINT ON SWING LEGS
             if F_contact[foot] == 0:
-                constr += [F[foot*3+2] == 0]
+                constr += [F[foot * 3 + 2] == 0]
 
-        cost = cp.quad_form((A@F - bd), S)# + alpha*cp.norm(F)**2 + beta*cp.norm(F-F_prev)**2
+        cost = cp.quad_form((A @ F - bd), S)  # + alpha*cp.norm(F)**2 + beta*cp.norm(F-F_prev)**2
 
-        prob = cp.Problem(cp.Minimize(cost),constr)
-        
+        prob = cp.Problem(cp.Minimize(cost), constr)
+
         prob.solve()
 
         F_leg = F.value
@@ -704,7 +748,7 @@ class QuadrupedGymEnv(gym.Env):
         torque_ff = np.zeros(12)
 
         for i in range(4):
-            torque_ff[i*3 : i*3+3] = -np.dot(J_leg[i].T, F_leg[i*3 : i*3+3])
+            torque_ff[i * 3 : i * 3 + 3] = -np.dot(J_leg[i].T, F_leg[i * 3 : i * 3 + 3])
 
         return torque_ff
 
@@ -719,31 +763,39 @@ def build_env():
         "add_noise": False,
         "enable_action_interpolation": False,
         "enable_action_filter": True,
-        "task_env": "JUMPING_ON_PLACE_HEIGHT",
-        "observation_space_mode": "ARS_HEIGHT",
+        "task_env": "JUMPING_IN_PLACE",
+        "observation_space_mode": "PHI_DES",
         "action_space_mode": "SYMMETRIC",
-        "enable_env_randomization": False,
-        "env_randomizer_mode": "SETTLING_RANDOMIZER",
+        "enable_env_randomization": True,
+        # "env_randomizer_mode": "PITCH_RANDOMIZER",
+        "curriculum_level": 0.0,
     }
     env = QuadrupedGymEnv(**env_config)
 
-    env = ObsFlatteningWrapper(env)
     # env = RestWrapper(env)
+    # env = MoEWrapper(env, "logs/MoE_pitch_28_06")
+    # env = ObsFlatteningWrapper(env)
     # env = LandingWrapper(env)
+
     return env
 
 
 def test_env():
     env = build_env()
-    sim_steps = 500
-    action_dim = env.get_action_dim()
+    # env.print_curriculum_info()
+    sim_steps = 1500
     obs = env.reset()
+    action_dim = env.get_action_dim()
+    # print(env.robot.GetMotorAngles())
     for i in range(sim_steps):
         action = np.random.rand(action_dim) * 2 - 1
         # action = np.full(action_dim, 0)
+        # action = np.array([0, 0, -0.1, 0, 0, +0.3])
         # action = env.get_settling_action()
+        # action = [1, 0, 0]
         obs, reward, done, info = env.step(action)
-    # env.print_task_info()
+        # if done:
+        #     print(env.robot.GetMotorAngles())
     env.close()
     print("end")
 
