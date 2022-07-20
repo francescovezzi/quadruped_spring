@@ -798,8 +798,8 @@ class Quadruped(object):
             self._pybullet_client.setCollisionFilterPair(quad_ID, base_block_ID, i, -1, 0)
     
     def getFootPositionAndVelocity(self,foot_id):
-        foot_pos = self._pybullet_client.getLinkState(self, foot_id, computeLinkVelocity=1)[0]
-        foot_vel = self._pybullet_client.getLinkState(self, foot_id, computeLinkVelocity=1)[6]
+        foot_pos = self._pybullet_client.getLinkState(self.quadruped,foot_id, computeLinkVelocity=1)[0]
+        foot_vel = self._pybullet_client.getLinkState(self.quadruped,foot_id, computeLinkVelocity=1)[6]
         return foot_pos,foot_vel
 
     def getFootIndices(self):

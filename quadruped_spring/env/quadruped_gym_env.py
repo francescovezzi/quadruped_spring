@@ -28,6 +28,7 @@ from quadruped_spring.env.wrappers.obs_flattening_wrapper import ObsFlatteningWr
 from quadruped_spring.utils import action_filter
 #
 # Landing controller
+from pathlib import Path
 import pinocchio as pin
 from pinocchio.explog import log
 from pinocchio.robot_wrapper import RobotWrapper
@@ -605,18 +606,20 @@ class QuadrupedGymEnv(gym.Env):
         base_vel = self.robot.GetBaseLinearVelocity()
         J_leg = np.zeros((4, 3, 3))
         for i in range(4):
-            foot_poses[i,:] = self.robot.getFootPositionAndVelocity(foot_indices[i])[0] - base_pos
-            foot_vels[i,:] = self.robot.getFootPositionAndVelocity(foot_indices[i])[1] - base_vel
-            J_leg[i,:,:],_ = self.robot.ComputeJacobianAndPosition[foot_indices[i]]
-        # Get contact forces:
-        # F_contact = np.zeros(4)
-        # contacts = pybullet.getContactPoints(urobtx.id,sim_env.floor.id)
-        # for contact in contacts:
-        #     if contact[3] in foot_indices:
-        #         idx = np.where(np.array(foot_indices)==contact[3])[0][0]
-        #         F_contact[idx] += contact[9]
+            
+            foot_poses[i,:] = np.array(self.robot.getFootPositionAndVelocity(foot_indices[i])[0]) - base_pos
+            foot_vels[i,:] = np.array(self.robot.getFootPositionAndVelocity(foot_indices[i])[1]) - base_vel
+            J_leg[i],_ = self.robot.ComputeJacobianAndPosition(i)
 
-        # print("Contact forces: ", F_contact)
+        # Get contact forces:
+        F_contact = np.zeros(4)
+        contacts = pybullet.getContactPoints(self.robot.quadruped,self.plane)
+        for contact in contacts:
+            if contact[3] in foot_indices:
+                idx = np.where(np.array(foot_indices)==contact[3])[0][0]
+                F_contact[idx] += contact[9]
+
+        print("Contact forces: ", F_contact)
 
 
         # PD gains for position and orientation:
@@ -665,12 +668,12 @@ class QuadrupedGymEnv(gym.Env):
         # THIS NEEDS TO BE FIXED - LOG DIFFERENCE?
         des_base_ang_acc = (Kp_w*(pin.log(M_base_des @ M_base.T)) + Kd_w*(des_base_ang_vel - base_ang_vel)) 
         
-        mass = self.robot.GetTotalMassFromURDF()
+        mass = np.sum(np.array(self.robot.GetTotalMassFromURDF()))
 
         bd = np.hstack((mass * (des_base_acc - grav), Ig @ des_base_ang_acc))
 
-        print("des_base_acc: ", des_base_acc)
-        print("des_base_ang_acc: ", des_base_ang_acc)
+        # print("des_base_acc: ", des_base_acc)
+        # print("des_base_ang_acc: ", des_base_ang_acc)
         # Cost matrices
         S = 12*np.eye(6)
         alpha = 0.01
@@ -688,8 +691,8 @@ class QuadrupedGymEnv(gym.Env):
             constr += [-frict_coeff*F[foot*3+2] <= F[foot*3], F[foot*3] <= frict_coeff*F[foot*3+2]]
             constr += [-frict_coeff*F[foot*3+2] <= F[foot*3+1], F[foot*3+1] <= frict_coeff*F[foot*3+2]]
             ### ADD CONSTRAINT ON SWING LEGS
-            # if F_contact[foot] == 0:
-                # constr += [F[foot*3+2] == 0]
+            if F_contact[foot] == 0:
+                constr += [F[foot*3+2] == 0]
 
         cost = cp.quad_form((A@F - bd), S)# + alpha*cp.norm(F)**2 + beta*cp.norm(F-F_prev)**2
 
@@ -702,8 +705,7 @@ class QuadrupedGymEnv(gym.Env):
         torque_ff = np.zeros(12)
 
         for i in range(4):
-            for j in range(3):
-                torque_ff[i*3 + j] = -np.dot(J_leg[i].T, F_leg[i*3 + j])
+            torque_ff[i*3 : i*3+3] = -np.dot(J_leg[i].T, F_leg[i*3 : i*3+3])
 
         return torque_ff
 
