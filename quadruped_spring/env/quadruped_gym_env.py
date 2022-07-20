@@ -30,7 +30,7 @@ from quadruped_spring.env.tasks.task_collection import TaskCollection
 from quadruped_spring.env.wrappers.initial_pose_wrapper import InitialPoseWrapper
 
 # from quadruped_spring.env.wrappers.rest_wrapper import RestWrapper
-from quadruped_spring.env.wrappers.landing_wrapper import LandingWrapper
+from quadruped_spring.env.wrappers.landing_wrapper import LandingWrapper, LandingCallback
 from quadruped_spring.env.wrappers.moe_wrapper import MoEWrapper
 from quadruped_spring.env.wrappers.obs_flattening_wrapper import ObsFlatteningWrapper
 from quadruped_spring.utils import action_filter
@@ -300,7 +300,7 @@ class QuadrupedGymEnv(gym.Env):
     ######################################################################################
     def reset(self):
         """Set up simulation environment."""
-
+        
         self.reset_pybullet_simulation()
         if self._add_noise:
             self._set_ground_friction()
@@ -579,6 +579,10 @@ class QuadrupedGymEnv(gym.Env):
     def print_curriculum_info(self):
         """Print curriculum info."""
         self.task.print_curriculum_info()
+    
+    def set_landing_callback(self, callback):
+        """Set the landing callback."""
+        self.landing_callback = callback
 
     def print_info(self):
         """Print environment info."""
