@@ -20,7 +20,7 @@ NUM_LEGS = 4
 MOTORS_PER_LEG = 3
 
 INIT_RACK_POSITION = [0, 0, 1]  # when hung up in air (for debugging)
-INIT_POSITION = [0, 0, 0.32]  # normal initial height
+INIT_POSITION = [0, 0, 0.5]  # normal initial height
 IS_FALLEN_HEIGHT = 0.12  # height at which robot is considered fallen
 
 INIT_ORIENTATION = (0, 0, 0, 1)

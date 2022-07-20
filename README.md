@@ -15,7 +15,7 @@ Your command prompt should now look like:
 
 `(venv_name) user@pc:path$`
 
-The repository depends on recent versions of pybullet, numpy, etc., which you can install inside your virtual environment with: 
+Install all dependencies:
 
 `pip install -r requirements.txt `
 
@@ -23,11 +23,11 @@ The repository depends on recent versions of pybullet, numpy, etc., which you ca
 
 ## Code structure
 
-- [env](./env) for the quadruped environment files, please see the gym simulation environment [quadruped_gym_env.py](./env/quadruped_gym_env.py), the robot specific functionalities in [quadruped.py](./env/quadruped.py), and config variables in [configs_a1.py](./env/configs_a1.py). You will need to make edits in [quadruped_gym_env.py](./env/quadruped_gym_env.py), and review [quadruped.py](./env/quadruped.py) carefully for accessing robot states and calling functions to solve inverse kinematics, return the leg Jacobian, etc. 
-- [a1_description](./a1_description) contains the robot mesh files and urdf.
+- [env](./env) for the quadruped environment files, please see the gym simulation environment [quadruped_gym_env.py](./env/quadruped_gym_env.py), the robot specific functionalities in [quadruped.py](./env/quadruped.py), and config variables in [configs_go1.py](./env/configs_go1.py). You will need to make edits in [quadruped_gym_env.py](./env/quadruped_gym_env.py), and review [quadruped.py](./env/quadruped.py) carefully for accessing robot states and calling functions to solve inverse kinematics, return the leg Jacobian, etc. 
+- [go1_description](./go1_description) contains the robot mesh files and urdf.
 - [utils](./utils) for some file i/o and plotting helpers.
 - [hopf_network.py](./hopf_polar.py) provides a CPG class skeleton for various gaits, and maps these to be executed on an instance of the  [quadruped_gym_env](./env/quadruped_gym_env.py) class. Please fill in this file carefully. 
-- [run_sb3.py](./run_sb3.py) and [load_sb3.py](./load_sb3.py) provide an interface to training RL algorithms based on [stable-baselines3](https://github.com/DLR-RM/stable-baselines3). You should review the documentation carefully for information on the different algorithms and training hyperparameters. 
+- [load_sb3.py](./load_sb3.py) provide an interface for loading a RL pre-trained model based on [stable-baselines3](https://github.com/DLR-RM/stable-baselines3). For training take a look at the documentation or at [rl-baselines3-zoo](https://github.com/DLR-RM/rl-baselines3-zoo).
 
 ## Code resources
 - The [PyBullet Quickstart Guide](https://docs.google.com/document/d/10sXEhzFRSnvFcl3XxNGhnD4N2SedqwdAvK3dsihxVUA/edit#heading=h.2ye70wns7io3) is the current up-to-date documentation for interfacing with the simulation. 
