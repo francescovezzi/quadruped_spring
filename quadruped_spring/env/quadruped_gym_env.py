@@ -2,7 +2,6 @@
 import datetime
 import os
 import time
-from os.path import abspath, dirname, join
 
 #
 # Landing controller
@@ -12,7 +11,6 @@ from pathlib import Path
 
 # gym
 import gym
-import matplotlib.pyplot as plt
 import numpy as np
 # import pinocchio as pin
 
@@ -123,7 +121,6 @@ class QuadrupedGymEnv(gym.Env):
           env_randomizer_mode: String specifying which env randomizers to use.
           curriculum_level: Scalar in [0,1] specyfing the task difficulty level.
         """
-        self.seed()
         self.verbose = verbose
         # self.pinocchio_model = self.setupPinocchio()
 
