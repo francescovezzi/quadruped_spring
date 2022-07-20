@@ -662,11 +662,10 @@ class QuadrupedGymEnv(gym.Env):
         des_base_acc = Kp_p*(des_base - base_pos) + Kd_p*(des_base_vel - base_vel) 
         
         R_base = R.from_quat(np.array(base_quat)).as_matrix()
-        M_base = pin.SE3(R_base, np.matrix([0, 0, 0]).T).rotation
+        # M_base = pin.SE3(R_base, np.matrix([0, 0, 0]).T).rotation
         R_base_des = (R.from_quat(np.array([0,0,0,1]))).as_matrix()
-        M_base_des = pin.SE3(R_base_des, np.matrix([0, 0, 0]).T).rotation
-        # THIS NEEDS TO BE FIXED - LOG DIFFERENCE?
-        des_base_ang_acc = (Kp_w*(pin.log(M_base_des @ M_base.T)) + Kd_w*(des_base_ang_vel - base_ang_vel)) 
+        # M_base_des = pin.SE3(R_base_des, np.matrix([0, 0, 0]).T).rotation
+        des_base_ang_acc = (Kp_w*(pin.log(R_base_des @ R_base.T)) + Kd_w*(des_base_ang_vel - base_ang_vel)) 
         
         mass = np.sum(np.array(self.robot.GetTotalMassFromURDF()))
 
