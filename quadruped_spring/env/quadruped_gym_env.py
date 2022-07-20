@@ -40,9 +40,7 @@ from quadruped_spring.env.sensors.robot_sensors import SensorList
 from quadruped_spring.env.sensors.sensor_collection import SensorCollection
 from quadruped_spring.env.tasks.task_collection import TaskCollection
 
-# from quadruped_spring.env.wrappers.rest_wrapper import RestWrapper
 from quadruped_spring.env.wrappers.landing_wrapper import LandingCallback, LandingWrapper
-from quadruped_spring.env.wrappers.moe_wrapper import MoEWrapper
 from quadruped_spring.env.wrappers.obs_flattening_wrapper import ObsFlatteningWrapper
 from quadruped_spring.utils import action_filter
 
