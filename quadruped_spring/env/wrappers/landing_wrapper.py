@@ -81,37 +81,37 @@ class LandingWrapper(gym.Wrapper):
         return obs
 
 
-class LandingCallback():
-    def __init__(self, env, step_interval = 5):
+class LandingCallback:
+    def __init__(self, env, step_interval=5):
         self._env = env
         self.step_interval = step_interval  # It means (1000 / 5) -> 200 Hz
         self.torque_dim = self._env.get_robot_config().NUM_MOTORS  # 12
         self.desired_torques = np.zeros(self.torque_dim)
         self.enable_callback = False
         self.counter = 0
-        
+
     def reset(self):
         self.enable_callback = False
         self.counter = 0
         self.robot = self._env.robot
-        
+
     def activate(self):
         self.enable_callback = True
-    
+
     def deactivate(self):
         self.enable_callback = False
         self.counter = 0  # Maybe irrelevant
-    
+
     def _compute_torques(self):
         # raise RuntimeError('Please implement me :(')
-        
+
         return np.ones(12) * 80
-    
+
     def compute_torques(self):
         if self.counter % self.step_interval == 0:
             self.desired_torques = self._compute_torques()
         return self.desired_torques
-    
+
     def _callback_step(self):
         des_torques = self.compute_torques()
         self.robot.apply_external_torque(des_torques)
@@ -120,8 +120,8 @@ class LandingCallback():
     def callback_step(self):
         if self.enable_callback:
             self._callback_step()
-    
+
     def is_enabled(self):
         return self.enable_callback
-            
+
     __call__ = callback_step

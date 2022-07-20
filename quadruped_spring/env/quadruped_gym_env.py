@@ -30,7 +30,7 @@ from quadruped_spring.env.tasks.task_collection import TaskCollection
 from quadruped_spring.env.wrappers.initial_pose_wrapper import InitialPoseWrapper
 
 # from quadruped_spring.env.wrappers.rest_wrapper import RestWrapper
-from quadruped_spring.env.wrappers.landing_wrapper import LandingWrapper, LandingCallback
+from quadruped_spring.env.wrappers.landing_wrapper import LandingCallback, LandingWrapper
 from quadruped_spring.env.wrappers.moe_wrapper import MoEWrapper
 from quadruped_spring.env.wrappers.obs_flattening_wrapper import ObsFlatteningWrapper
 from quadruped_spring.utils import action_filter
@@ -167,7 +167,7 @@ class QuadrupedGymEnv(gym.Env):
             self._env_randomizer_mode = env_randomizer_mode
             self._env_randomizers = EnvRandomizerList(EnvRandomizerCollection().get_el(self._env_randomizer_mode))
             self._env_randomizers._init(self)
-        
+
         self.landing_callback = None
 
         self.reset()
@@ -242,7 +242,7 @@ class QuadrupedGymEnv(gym.Env):
         if increase_sim_counter:
             self._sim_step_counter += 1
         if self._is_render:
-            self._render_step_helper()        
+            self._render_step_helper()
 
     def step(self, action):
         """Step forward the simulation, given the action."""
@@ -300,7 +300,7 @@ class QuadrupedGymEnv(gym.Env):
     ######################################################################################
     def reset(self):
         """Set up simulation environment."""
-        
+
         self.reset_pybullet_simulation()
         if self._add_noise:
             self._set_ground_friction()
@@ -579,7 +579,7 @@ class QuadrupedGymEnv(gym.Env):
     def print_curriculum_info(self):
         """Print curriculum info."""
         self.task.print_curriculum_info()
-    
+
     def set_landing_callback(self, callback):
         """Set the landing callback."""
         self.landing_callback = callback
