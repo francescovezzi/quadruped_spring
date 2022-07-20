@@ -22,26 +22,22 @@ from quadruped_spring.utils.video_recording import VideoRec
 
 SEED = 24
 
+# Agent selection
 LEARNING_ALGS = {"ars": ARS}
 LEARNING_ALG = "ars"
-SUB_FOLDER = "MoE_28_06"
+SUB_FOLDER = "jumping_forward/07_17"
 ENV_ID = "QuadrupedSpring-v0"
 ID = "1"
-MODEL = "rl_model_22000000_steps"
 MODEL = "best_model"
 
-REC_VIDEO = False
-SAVE_PLOTS = False
-RENDER = False
-EVAL_EPISODES = 1
-ENABLE_ENV_RANDOMIZATION = False
-ENV_RANDOMIZER = "MASS_SETTLING_RANDOMIZER"
-CURRICULUM_LEVEL = 0.2
+REC_VIDEO = False  # Enable for video recording
+SAVE_PLOTS = False  # Enable for save plots of the episode
+RENDER = False  # For rendering
+EVAL_EPISODES = 1  # Number of episodes to simulate
+ENABLE_ENV_RANDOMIZATION = False  # For enable env randomization
+ENV_RANDOMIZER = "MASS_RANDOMIZER"  # Mass randomization
 
 LOG_DIR = f"logs/{SUB_FOLDER}"
-
-MOE_ENABLED = True
-PRINT_PHI = MOE_ENABLED
 
 
 def callable_env(env_id, wrappers, kwargs):
@@ -89,14 +85,15 @@ if os.path.isfile(args_file):
         loaded_args = yaml.load(f, Loader=yaml.UnsafeLoader)  # pytype: disable=module-attr
         if loaded_args["env_kwargs"] is not None:
             env_kwargs = loaded_args["env_kwargs"]
-if RENDER:
-    env_kwargs["render"] = True
+            if RENDER:
+                env_kwargs["render"] = True
+            env_kwargs["task_env"] = "ENDLESS_JUMPING"
+
 wrapper_list = loaded_args["hyperparams"]["env_wrapper"]
 
 # build env
 env_kwargs["enable_env_randomization"] = ENABLE_ENV_RANDOMIZATION
 env_kwargs["env_randomizer_mode"] = ENV_RANDOMIZER
-env_kwargs["curriculum_level"] = CURRICULUM_LEVEL
 env = callable_env(QuadrupedGymEnv, wrapper_list, env_kwargs)
 env = make_vec_env(env, n_envs=1)
 env = VecNormalize.load(stats_file, env)
@@ -113,11 +110,15 @@ model = LEARNING_ALGS[LEARNING_ALG].load(model_file, env, custom_objects=custom_
 print(f"\nLoaded model: {model_file}\n")
 set_random_seed(SEED)
 
+
+#################################################################
 # run model
-obs = env.reset()
+#################################################################
+obs = env.reset()  # Always reset enviornment before stepping in it
 n_episodes = EVAL_EPISODES
 total_reward = 0
 total_success = 0
+# Simulate episodes
 for _ in range(n_episodes):
     done = False
     while not done:
@@ -133,20 +134,6 @@ if REC_VIDEO:
     env.env_method("release_video", indices=0)
 if SAVE_PLOTS:
     env.env_method("release_plots", indices=0)
-if PRINT_PHI:
-    phi_min, phi_max = env.env_method("get_phi_range", indices=0)[0]
-    phi_list = np.linspace(phi_min, phi_max, 500)
-    phi_list_normalized = [env.env_method("normalize_phi", phi, indices=0)[0] for phi in phi_list]
-    weights = [model.predict([phi]) for phi in phi_list_normalized]
-    weights = [env.env_method("scale_weights", weight, indices=0)[0] for weight in weights]
-    fig, axes = plt.subplots(3, 1, sharex=True)
-    fig.suptitle(r"ensemble functions")
-    y_labels = [r"w0", r"w1", r"w2"]
-    for i, ax in enumerate(axes):
-        ax.plot(phi_list, weights[:, i])
-        ax.set_xlabel(r"$\phi$")
-        ax.set_ylabel(y_labels[i])
-    fig.savefig(os.path.join(plot_dir, f"{ENV_ID}_{ID}"), "weights")
 
 env_randomizer = env.env_method("get_randomizer_mode", indices=0)[0]
 print("\n")
