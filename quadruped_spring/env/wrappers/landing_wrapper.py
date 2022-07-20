@@ -105,7 +105,7 @@ class LandingCallback:
     def _compute_torques(self):
         # raise RuntimeError('Please implement me :(')
 
-        return np.ones(12) * 80
+        return np.ones(12) * 0
 
     def compute_torques(self):
         if self.counter % self.step_interval == 0:
