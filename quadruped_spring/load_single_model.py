@@ -25,14 +25,14 @@ SEED = 24
 # Agent selection
 LEARNING_ALGS = {"ars": ARS}
 LEARNING_ALG = "ars"
-SUB_FOLDER = "jumping_forward/07_17"
+SUB_FOLDER = "jumping_in_place/07_15"
 ENV_ID = "QuadrupedSpring-v0"
-ID = "1"
+ID = "4"
 MODEL = "best_model"
 
 REC_VIDEO = False  # Enable for video recording
 SAVE_PLOTS = False  # Enable for save plots of the episode
-RENDER = False  # For rendering
+RENDER = True  # For rendering
 EVAL_EPISODES = 1  # Number of episodes to simulate
 ENABLE_ENV_RANDOMIZATION = False  # For enable env randomization
 ENV_RANDOMIZER = "MASS_RANDOMIZER"  # Mass randomization
