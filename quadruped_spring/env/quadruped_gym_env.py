@@ -8,13 +8,21 @@ from os.path import abspath, dirname, join
 # Landing controller
 from pathlib import Path
 
+<<<<<<< HEAD
 # import cvxpy as cp
+=======
+import cvxpy as cp
+>>>>>>> origin/feat/model_based_landing
 
 # gym
 import gym
 import matplotlib.pyplot as plt
 import numpy as np
+<<<<<<< HEAD
 # import pinocchio as pin
+=======
+import pinocchio as pin
+>>>>>>> origin/feat/model_based_landing
 
 # pybullet
 import pybullet
@@ -22,9 +30,15 @@ import pybullet_data
 import pybullet_utils.bullet_client as bc
 from gym import spaces
 from gym.utils import seeding
+<<<<<<< HEAD
 # from pinocchio.explog import log
 # from pinocchio.robot_wrapper import RobotWrapper
 # from pinocchio.utils import *
+=======
+from pinocchio.explog import log
+from pinocchio.robot_wrapper import RobotWrapper
+from pinocchio.utils import *
+>>>>>>> origin/feat/model_based_landing
 from scipy.spatial.transform import Rotation as R
 from stable_baselines3.common.env_util import is_wrapped
 from stable_baselines3.common.utils import set_random_seed
@@ -127,7 +141,11 @@ class QuadrupedGymEnv(gym.Env):
         """
         self.seed()
         self.verbose = verbose
+<<<<<<< HEAD
         # self.pinocchio_model = self.setupPinocchio()
+=======
+        self.pinocchio_model = self.setupPinocchio()
+>>>>>>> origin/feat/model_based_landing
 
         self._enable_springs = enable_springs
         if self._enable_springs:
@@ -270,8 +288,13 @@ class QuadrupedGymEnv(gym.Env):
             proc_action = action
 
         # ADD LANDING CONTROLLER HERE:
+<<<<<<< HEAD
         # torque_ff = self.landingController()
         # print(torque_ff)
+=======
+        torque_ff = self.landingController()
+        print(torque_ff)
+>>>>>>> origin/feat/model_based_landing
         self.robot.ApplyAction(proc_action)
         if self._enable_env_randomization:
             self._env_randomizers.randomize_step()
