@@ -102,6 +102,7 @@ class LandingCallback:
         self.enable_callback = False
         self.counter = 0  # Maybe irrelevant
 
+    # Put your external torques here guy!
     def _compute_torques(self):
         # raise RuntimeError('Please implement me :(')
 

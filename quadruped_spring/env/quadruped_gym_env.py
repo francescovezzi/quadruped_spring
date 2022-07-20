@@ -2,11 +2,19 @@
 import datetime
 import os
 import time
+from os.path import abspath, dirname, join
+
+#
+# Landing controller
+from pathlib import Path
+
+# import cvxpy as cp
 
 # gym
 import gym
 import matplotlib.pyplot as plt
 import numpy as np
+# import pinocchio as pin
 
 # pybullet
 import pybullet
@@ -14,6 +22,10 @@ import pybullet_data
 import pybullet_utils.bullet_client as bc
 from gym import spaces
 from gym.utils import seeding
+# from pinocchio.explog import log
+# from pinocchio.robot_wrapper import RobotWrapper
+# from pinocchio.utils import *
+from scipy.spatial.transform import Rotation as R
 from stable_baselines3.common.env_util import is_wrapped
 from stable_baselines3.common.utils import set_random_seed
 
@@ -27,7 +39,6 @@ from quadruped_spring.env.env_randomizers.env_randomizer_list import EnvRandomiz
 from quadruped_spring.env.sensors.robot_sensors import SensorList
 from quadruped_spring.env.sensors.sensor_collection import SensorCollection
 from quadruped_spring.env.tasks.task_collection import TaskCollection
-from quadruped_spring.env.wrappers.initial_pose_wrapper import InitialPoseWrapper
 
 # from quadruped_spring.env.wrappers.rest_wrapper import RestWrapper
 from quadruped_spring.env.wrappers.landing_wrapper import LandingCallback, LandingWrapper
@@ -116,6 +127,8 @@ class QuadrupedGymEnv(gym.Env):
         """
         self.seed()
         self.verbose = verbose
+        # self.pinocchio_model = self.setupPinocchio()
+
         self._enable_springs = enable_springs
         if self._enable_springs:
             self._robot_config = go1_config_with_springs
@@ -177,6 +190,31 @@ class QuadrupedGymEnv(gym.Env):
     ######################################################################################
     # RL Observation and Action spaces
     ######################################################################################
+    def setupPinocchio(self):
+        ########whold-body simu:
+        Full_body_simu = True
+        ##########for robot with float-base ################################
+        Freebase = True
+
+        mesh_dir = str(Path(__file__).parent.absolute())
+        print("mesh_dir:", mesh_dir)
+
+        # You should change here to set up your own URDF file
+        if Full_body_simu:
+            # urdf_filename = mesh_dir + '/go1_description/urdf/go1_full_no_grippers.urdf'
+            urdf_filename = mesh_dir + "/go1_description/urdf/go1_origin.urdf"
+        else:
+            urdf_filename = mesh_dir + "/go1_description/urdf/go1_origin.urdf"
+
+        ### pinocchio load urdf
+        if Freebase:
+            robot = RobotWrapper.BuildFromURDF(urdf_filename, mesh_dir, pin.JointModelFreeFlyer())
+            # addFreeFlyerJointLimits(robot)
+        else:
+            robot = RobotWrapper.BuildFromURDF(urdf_filename, mesh_dir)
+
+        return robot
+
     def setupObservationSpace(self):
         self._robot_sensors._init(self.get_robot_config())
         obs_high = self._robot_sensors._get_high_limits() + OBSERVATION_EPS
@@ -230,6 +268,10 @@ class QuadrupedGymEnv(gym.Env):
             proc_action = self._ac_interface._transform_action_to_motor_command(action)
         else:
             proc_action = action
+
+        # ADD LANDING CONTROLLER HERE:
+        # torque_ff = self.landingController()
+        # print(torque_ff)
         self.robot.ApplyAction(proc_action)
         if self._enable_env_randomization:
             self._env_randomizers.randomize_step()
@@ -595,10 +637,129 @@ class QuadrupedGymEnv(gym.Env):
             print(f"env randomizer -> {self._env_randomizer_mode}")
         print("")
 
+    # Landing controller
+    def landingController(self):
+        ############# Landing Controller ###################################
+        robot = self.pinocchio_model
+
+        # Get foot positions (relative to CoM) and Jacobian:
+        foot_indices = self.robot.getFootIndices()
+        foot_poses = np.zeros([4, 3])
+        foot_vels = np.zeros([4, 3])
+        base_pos = self.robot.GetBasePosition()
+        base_vel = self.robot.GetBaseLinearVelocity()
+        J_leg = np.zeros((4, 3, 3))
+        for i in range(4):
+
+            foot_poses[i, :] = np.array(self.robot.getFootPositionAndVelocity(foot_indices[i])[0]) - base_pos
+            foot_vels[i, :] = np.array(self.robot.getFootPositionAndVelocity(foot_indices[i])[1]) - base_vel
+            J_leg[i], _ = self.robot.ComputeJacobianAndPosition(i)
+
+        # Get contact forces:
+        F_contact = np.zeros(4)
+        contacts = pybullet.getContactPoints(self.robot.quadruped, self.plane)
+        for contact in contacts:
+            if contact[3] in foot_indices:
+                idx = np.where(np.array(foot_indices) == contact[3])[0][0]
+                F_contact[idx] += contact[9]
+
+        print("Contact forces: ", F_contact)
+
+        # PD gains for position and orientation:
+        Kp_p = 20
+        Kd_p = 0.1
+        Kp_w = 10
+        Kd_w = 0.1
+
+        n = 12  # 12 Force components (4 legs * 3 directions)from scipy.spatial.transform import Rotation as R
+        arr = [np.eye(3) for i in range(4)]
+        A = np.hstack(arr)
+        pos = [
+            np.array(
+                [
+                    [0, -foot_poses[i, 2], foot_poses[i, 1]],
+                    [foot_poses[i, 2], 0, -foot_poses[i, 0]],
+                    [-foot_poses[i, 1], foot_poses[i, 0], 0],
+                ]
+            )
+            for i in range(4)
+        ]  # SKEW SYMMETRIC MATRIX FROM CROSS PRODUCT
+        A = np.vstack((A, np.hstack(pos)))
+
+        grav = np.array([0, 0, -9.81])
+        # Compute centroidal inertia matrix using pinnochio
+
+        base_quat = self.robot.GetBaseOrientation()
+        base_vel = self.robot.GetBaseLinearVelocity()
+        base_ang_vel = self.robot.GetBaseAngularVelocity()
+
+        q_mea = self.robot.GetMotorAngles()
+        dq_mea = self.robot.GetMotorVelocities()
+
+        q_pin = np.hstack((np.array(base_pos), base_quat, q_mea))
+        v_pin = np.hstack((np.array(base_vel), np.array(base_ang_vel), dq_mea))
+
+        pin.ccrba(robot.model, robot.data, q_pin, v_pin)
+        Ig = robot.data.Ig.inertia
+
+        # Desired base angular velocity, position and linear velocity
+        des_base_ang_vel = np.zeros(3)
+        des_base = np.array([base_pos[0], base_pos[1], 0.28])
+        des_base_vel = np.zeros(3)
+
+        des_base_acc = Kp_p * (des_base - base_pos) + Kd_p * (des_base_vel - base_vel)
+
+        R_base = R.from_quat(np.array(base_quat)).as_matrix()
+        # M_base = pin.SE3(R_base, np.matrix([0, 0, 0]).T).rotation
+        R_base_des = (R.from_quat(np.array([0, 0, 0, 1]))).as_matrix()
+        # M_base_des = pin.SE3(R_base_des, np.matrix([0, 0, 0]).T).rotation
+        des_base_ang_acc = Kp_w * (pin.log(R_base_des @ R_base.T)) + Kd_w * (des_base_ang_vel - base_ang_vel)
+
+        mass = np.sum(np.array(self.robot.GetTotalMassFromURDF()))
+
+        bd = np.hstack((mass * (des_base_acc - grav), Ig @ des_base_ang_acc))
+
+        # print("des_base_acc: ", des_base_acc)
+        # print("des_base_ang_acc: ", des_base_ang_acc)
+        # Cost matrices
+        S = 12 * np.eye(6)
+        alpha = 0.01
+        beta = 0.1
+        # Define and solve the CVXPY problem.
+        ## Some parameters (max force, friction coefficient)
+        Fz_max = 40
+        frict_coeff = 0.8
+        #####
+        F = cp.Variable(n)
+        constr = []
+        for foot in range(4):
+            # index [foot*3+2] means Fz of foot X.
+            constr += [0 <= F[foot * 3 + 2], F[foot * 3 + 2] <= Fz_max]
+            constr += [-frict_coeff * F[foot * 3 + 2] <= F[foot * 3], F[foot * 3] <= frict_coeff * F[foot * 3 + 2]]
+            constr += [-frict_coeff * F[foot * 3 + 2] <= F[foot * 3 + 1], F[foot * 3 + 1] <= frict_coeff * F[foot * 3 + 2]]
+            ### ADD CONSTRAINT ON SWING LEGS
+            if F_contact[foot] == 0:
+                constr += [F[foot * 3 + 2] == 0]
+
+        cost = cp.quad_form((A @ F - bd), S)  # + alpha*cp.norm(F)**2 + beta*cp.norm(F-F_prev)**2
+
+        prob = cp.Problem(cp.Minimize(cost), constr)
+
+        prob.solve()
+
+        F_leg = F.value
+
+        torque_ff = np.zeros(12)
+
+        for i in range(4):
+            torque_ff[i * 3 : i * 3 + 3] = -np.dot(J_leg[i].T, F_leg[i * 3 : i * 3 + 3])
+
+        return torque_ff
+
 
 def build_env():
     env_config = {
-        "render": False,
+        "render": True,
         "on_rack": False,
         "motor_control_mode": "PD",
         "action_repeat": 10,
@@ -615,7 +776,6 @@ def build_env():
     }
     env = QuadrupedGymEnv(**env_config)
 
-    env = InitialPoseWrapper(env, phi_des=5.0)
     # env = RestWrapper(env)
     # env = MoEWrapper(env, "logs/MoE_pitch_28_06")
     env = ObsFlatteningWrapper(env)
