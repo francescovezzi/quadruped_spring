@@ -46,11 +46,11 @@ class TaskBase:
 
     def _reward(self):
         """Return the reward funciton"""
-        pass
+        return 0
 
-    def _reward_end_episode(self, reward):
+    def _reward_end_episode(self, reward=0):
         """add bonus and malus to the actual reward at the end of the episode"""
-        pass
+        return reward
 
     def _terminated(self):
         """return boolean specifying whether episode is terminated"""

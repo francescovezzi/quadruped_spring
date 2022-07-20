@@ -26,6 +26,7 @@ class TaskCollection(CollectionBase):
         self.MULTIPLE_JUMPING_IN_PLACE = rt.MultipleJumpingInPlace
         self.JUMPING_FORWARD_HEIGHT = rt.JumpingForwardHeight
         self.NO_TASK = rt.NoTask
+        self.ENDLESS_JUMPING = rt.EndlessJumping
         self._element_type = "task"
         self._dict = {
             "JUMPING_CURRICULUM": self.JUMPING_CURRICULUM,
@@ -35,4 +36,5 @@ class TaskCollection(CollectionBase):
             "MULTIPLE_JUMPING_IN_PLACE": self.MULTIPLE_JUMPING_IN_PLACE,
             "JUMPING_FORWARD_HEIGHT": self.JUMPING_FORWARD_HEIGHT,
             "NO_TASK": self.NO_TASK,
+            "ENDLESS_JUMPING": self.ENDLESS_JUMPING,
         }

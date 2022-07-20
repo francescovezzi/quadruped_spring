@@ -315,6 +315,13 @@ class MultipleJumpingInPlace(TaskJumping):
         super()._reset(env)
 
 
+class EndlessJumping(TaskJumping):
+    def __init__(self):
+        super().__init__()
+        
+    def _terminated(self):
+        return False
+
 class NoTask(TaskBase):
     """No tasks is required to be performed. Useful for using TORQUE action interface."""
 
