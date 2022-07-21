@@ -13,13 +13,13 @@ class LandingWrapper(gym.Wrapper):
     It's recommended to use this one as the last one.
     """
 
-    def __init__(self, env, step_interval=5):
+    def __init__(self, env):
         super().__init__(env)
         self._robot_config = self.env.get_robot_config()
         self._landing_action = self.env.get_landing_action()
         self.timer_jumping = Timer(dt=self.env.get_env_time_step())
         self.is_moe_wrapped = is_wrapped(self, MoEWrapper)
-        self.env.set_landing_callback(LandingCallback(self.env, step_interval))
+        self.env.set_landing_callback(LandingCallback(self.env))
 
     def temporary_switch_motor_control_gain(foo):
         def wrapper(self, *args, **kwargs):
@@ -82,10 +82,10 @@ class LandingWrapper(gym.Wrapper):
 
 
 class LandingCallback:
-    def __init__(self, env, step_interval=5):
+    def __init__(self, env):
         self._env = env
-        self.step_interval = step_interval  # It means (1000 / 5) -> 200 Hz
         self.torque_dim = self._env.get_robot_config().NUM_MOTORS  # 12
+        self.step_interval = self._env.get_robot_config().LANDING_CALLBACK_STEPS_INTERVAL
         self.desired_torques = np.zeros(self.torque_dim)
         self.enable_callback = False
         self.counter = 0

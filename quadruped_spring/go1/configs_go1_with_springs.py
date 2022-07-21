@@ -228,7 +228,10 @@ QUATERNION_NOISE = QUATERNION_HIGH * STD_COEFF
 PITCH_NOISE = PITCH_HIGH * STD_COEFF
 PITCH_RATE_NOISE = PITCH_RATE_HIGH * STD_COEFF
 
-#######################################################
-# Initial simulation position translation
-#######################################################
-TRANSLATION_OFFSET = [0.0, 1.4, 0.0]
+####################################################################################
+# Each x simulation time steps (0.001s) the callback update the landing command.
+# During x simulation time steps (0.001s * x) the torques computed by the callback
+# does not change.
+####################################################################################
+LANDING_CALLBACK_STEPS_INTERVAL = 5
+

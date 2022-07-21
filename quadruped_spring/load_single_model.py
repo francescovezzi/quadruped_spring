@@ -20,6 +20,10 @@ from quadruped_spring.env.wrappers.rest_wrapper import RestWrapper
 from quadruped_spring.utils.monitor_state import MonitorState
 from quadruped_spring.utils.video_recording import VideoRec
 
+# NOTE
+# For changing simulation time steps number the callback updates the torques
+# change the appropriate settings inside the go1/go1_config... file :D
+
 SEED = 24
 
 # Agent selection
