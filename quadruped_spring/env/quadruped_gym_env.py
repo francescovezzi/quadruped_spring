@@ -22,8 +22,6 @@ from gym.utils import seeding
 # from pinocchio.robot_wrapper import RobotWrapper
 # from pinocchio.utils import *
 from scipy.spatial.transform import Rotation as R
-from stable_baselines3.common.env_util import is_wrapped
-from stable_baselines3.common.utils import set_random_seed
 
 import quadruped_spring.go1.configs_go1_with_springs as go1_config_with_springs
 import quadruped_spring.go1.configs_go1_without_springs as go1_config_without_springs
@@ -35,7 +33,7 @@ from quadruped_spring.env.env_randomizers.env_randomizer_list import EnvRandomiz
 from quadruped_spring.env.sensors.robot_sensors import SensorList
 from quadruped_spring.env.sensors.sensor_collection import SensorCollection
 from quadruped_spring.env.tasks.task_collection import TaskCollection
-from quadruped_spring.env.wrappers.landing_wrapper import LandingCallback, LandingWrapper
+from quadruped_spring.env.wrappers.landing_wrapper import LandingWrapper
 from quadruped_spring.env.wrappers.obs_flattening_wrapper import ObsFlatteningWrapper
 from quadruped_spring.utils import action_filter
 
@@ -765,16 +763,15 @@ def build_env():
         "enable_action_interpolation": False,
         "enable_action_filter": True,
         "task_env": "JUMPING_IN_PLACE",
-        "observation_space_mode": "PHI_DES",
+        "observation_space_mode": "ARS_BASIC",
         "action_space_mode": "SYMMETRIC",
-        "enable_env_randomization": True,
+        "enable_env_randomization": False,
         "env_randomizer_mode": "PITCH_RANDOMIZER",
         "curriculum_level": 0.0,
     }
     env = QuadrupedGymEnv(**env_config)
 
     # env = RestWrapper(env)
-    # env = MoEWrapper(env, "logs/MoE_pitch_28_06")
     env = ObsFlatteningWrapper(env)
     env = LandingWrapper(env)
 
@@ -783,20 +780,12 @@ def build_env():
 
 def test_env():
     env = build_env()
-    # env.print_curriculum_info()
     sim_steps = 1500
     obs = env.reset()
     action_dim = env.get_action_dim()
-    # print(env.robot.GetMotorAngles())
     for i in range(sim_steps):
         action = np.random.rand(action_dim) * 2 - 1
-        # action = np.full(action_dim, 0)
-        # action = np.array([0, 0, -0.1, 0, 0, +0.3])
-        # action = env.get_settling_action()
-        # action = [1, 0, 0]
         obs, reward, done, info = env.step(action)
-        # if done:
-        #     print(env.robot.GetMotorAngles())
     env.close()
     print("end")
 

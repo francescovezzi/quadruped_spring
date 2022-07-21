@@ -6,16 +6,13 @@ os.sys.path.insert(0, currentdir)
 
 from importlib import import_module
 
-import numpy as np
 import yaml
-from matplotlib import pyplot as plt
 from sb3_contrib import ARS
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.utils import set_random_seed
 from stable_baselines3.common.vec_env import VecNormalize
 
 from env.quadruped_gym_env import QuadrupedGymEnv
-from quadruped_spring.env.wrappers.obs_flattening_wrapper import ObsFlatteningWrapper
 from quadruped_spring.env.wrappers.rest_wrapper import RestWrapper
 from quadruped_spring.utils.monitor_state import MonitorState
 from quadruped_spring.utils.video_recording import VideoRec
