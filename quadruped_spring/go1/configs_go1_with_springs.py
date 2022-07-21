@@ -234,4 +234,3 @@ PITCH_RATE_NOISE = PITCH_RATE_HIGH * STD_COEFF
 # does not change.
 ####################################################################################
 LANDING_CALLBACK_STEPS_INTERVAL = 5
-

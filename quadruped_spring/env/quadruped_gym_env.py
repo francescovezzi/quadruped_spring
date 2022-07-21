@@ -7,12 +7,9 @@ import time
 # Landing controller
 from pathlib import Path
 
-# import cvxpy as cp
-
 # gym
 import gym
 import numpy as np
-# import pinocchio as pin
 
 # pybullet
 import pybullet
@@ -20,6 +17,7 @@ import pybullet_data
 import pybullet_utils.bullet_client as bc
 from gym import spaces
 from gym.utils import seeding
+
 # from pinocchio.explog import log
 # from pinocchio.robot_wrapper import RobotWrapper
 # from pinocchio.utils import *
@@ -37,10 +35,14 @@ from quadruped_spring.env.env_randomizers.env_randomizer_list import EnvRandomiz
 from quadruped_spring.env.sensors.robot_sensors import SensorList
 from quadruped_spring.env.sensors.sensor_collection import SensorCollection
 from quadruped_spring.env.tasks.task_collection import TaskCollection
-
 from quadruped_spring.env.wrappers.landing_wrapper import LandingCallback, LandingWrapper
 from quadruped_spring.env.wrappers.obs_flattening_wrapper import ObsFlatteningWrapper
 from quadruped_spring.utils import action_filter
+
+# import cvxpy as cp
+
+# import pinocchio as pin
+
 
 ACTION_EPS = 0.01
 OBSERVATION_EPS = 0.01
