@@ -75,5 +75,6 @@ class Springs:
 
     def compute_spring_torques(self, motor_angles, motor_velocities):
         k, b = self.get_real_stiffness_and_damping(motor_angles)
+        # rest_angles = np.tile(self._rest_angles,4)
         spring_torques = -k * (motor_angles - self._rest_angles) - b * motor_velocities
         return spring_torques

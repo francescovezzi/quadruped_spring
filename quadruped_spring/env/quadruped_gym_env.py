@@ -18,9 +18,11 @@ import pybullet_utils.bullet_client as bc
 from gym import spaces
 from gym.utils import seeding
 
-# from pinocchio.explog import log
-# from pinocchio.robot_wrapper import RobotWrapper
-# from pinocchio.utils import *
+import cvxpy as cp
+import pinocchio as pin
+from pinocchio.explog import log
+from pinocchio.robot_wrapper import RobotWrapper
+from pinocchio.utils import *
 from scipy.spatial.transform import Rotation as R
 
 import quadruped_spring.go1.configs_go1_with_springs as go1_config_with_springs
@@ -122,7 +124,7 @@ class QuadrupedGymEnv(gym.Env):
           curriculum_level: Scalar in [0,1] specyfing the task difficulty level.
         """
         self.verbose = verbose
-        # self.pinocchio_model = self.setupPinocchio()
+        self.pinocchio_model = self.setupPinocchio()
 
         self._enable_springs = enable_springs
         if self._enable_springs:
@@ -547,6 +549,15 @@ class QuadrupedGymEnv(gym.Env):
         """Return boolean specifying whether springs are enabled."""
         return self._enable_springs
 
+    def get_springs_torques(self):
+        """If springs are enabled return their torque - else return 0s."""
+        if self.are_springs_enabled():
+            q = self.robot.GetMotorAngles()
+            vq = self.robot.GetMotorVelocities()
+            return self.robot._motor_model.compute_spring_torques(q,vq)
+        else:
+            return np.zeros(12)
+
     def task_terminated(self):
         """Return boolean specifying whether the task is terminated."""
         return self.task._terminated()
@@ -661,10 +672,10 @@ class QuadrupedGymEnv(gym.Env):
         print("Contact forces: ", F_contact)
 
         # PD gains for position and orientation:
-        Kp_p = 20
-        Kd_p = 0.1
-        Kp_w = 10
-        Kd_w = 0.1
+        Kp_p = 120
+        Kd_p = 25
+        Kp_w = 120
+        Kd_w = 25
 
         n = 12  # 12 Force components (4 legs * 3 directions)from scipy.spatial.transform import Rotation as R
         arr = [np.eye(3) for i in range(4)]
@@ -717,13 +728,13 @@ class QuadrupedGymEnv(gym.Env):
         # print("des_base_acc: ", des_base_acc)
         # print("des_base_ang_acc: ", des_base_ang_acc)
         # Cost matrices
-        S = 12 * np.eye(6)
-        alpha = 0.01
+        S = 80 * np.eye(6)
+        alpha = 0.001
         beta = 0.1
         # Define and solve the CVXPY problem.
         ## Some parameters (max force, friction coefficient)
         Fz_max = 40
-        frict_coeff = 0.8
+        frict_coeff = 1
         #####
         F = cp.Variable(n)
         constr = []
@@ -736,7 +747,7 @@ class QuadrupedGymEnv(gym.Env):
             if F_contact[foot] == 0:
                 constr += [F[foot * 3 + 2] == 0]
 
-        cost = cp.quad_form((A @ F - bd), S)  # + alpha*cp.norm(F)**2 + beta*cp.norm(F-F_prev)**2
+        cost = cp.quad_form((A @ F - bd), S)  #+ alpha*cp.norm(F)**2 #+ beta*cp.norm(F-F_prev)**2
 
         prob = cp.Problem(cp.Minimize(cost), constr)
 

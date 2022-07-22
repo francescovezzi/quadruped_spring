@@ -6,9 +6,10 @@ matplotlib.use("tkagg")
 import copy
 import os
 import time
+from pathlib import Path
 
 import matplotlib.pyplot as plt
-
+import scipy.io
 H_MIN = 0.15
 
 
@@ -60,6 +61,7 @@ class MonitorState(gym.Wrapper):
         self._pitch = []
         self._pitch_rate = []
         self._actions = []
+        self._foot_pos = []
 
     def _compute_energy_spring(self, q):
         if self.quadruped._enable_springs:
@@ -81,6 +83,9 @@ class MonitorState(gym.Wrapper):
         self._base_or.append(self.quadruped.GetBaseOrientationRollPitchYaw())
         self._feet_normal_forces.append(self.quadruped.GetContactInfo()[2])
         self._pitch_rate.append([self.quadruped.GetTrueBaseRollPitchYawRate()[1]])
+        foot_indices = self.quadruped.getFootIndices()
+        foot_pos = np.array([self.quadruped.getFootPositionAndVelocity(foot)[0] for foot in foot_indices])
+        self._foot_pos.append(foot_pos)
 
     def _transform_to_array(self):
         self._time = np.asarray(self._time)
@@ -109,6 +114,7 @@ class MonitorState(gym.Wrapper):
             "feet_forces",
             "pitch_rate",
             "actions",
+            "foot_pos",
         ]
         ret_values = [
             self._time,
@@ -122,6 +128,7 @@ class MonitorState(gym.Wrapper):
             self._feet_normal_forces,
             self._pitch_rate,
             self._actions,
+            self._foot_pos,
         ]
         ret = dict(zip(ret_keys, ret_values))
         self._init_storage()
@@ -292,8 +299,19 @@ class MonitorState(gym.Wrapper):
 
         return fig, axs
 
+    def _save_data(self):
+        ID = 0
+        _data = {"time":self._time,"motor_tau":self._motor_tau,"spring_tau":self._tau_spring,
+        "energy_spring":self._energy_spring,"base_pos":self._base_pos,"base_ori":self._base_or,
+        "feet_normal_forces":self._feet_normal_forces,"pitch_rate":self._pitch_rate,
+        "foot_pos":self._foot_pos}
+        path = str((Path(__file__).parent.absolute()).parent.absolute()) + "/logs"
+        name = "exp_springs_ff_9.mat"
+        scipy.io.savemat(os.path.join(self._path, name),_data)
+
     def _generate_figs(self):
         self._transform_to_array()
+        self._save_data()
         fig_height, _ = self._plot_height()
         fig_motor_torque, _ = self._plot_motor_torques()
         fig_motor_true_velocity, _ = self._plot_true_motor_velocities()

@@ -6,20 +6,19 @@ os.sys.path.insert(0, currentdir)
 
 from importlib import import_module
 
+import numpy as np
 import yaml
+# from matplotlib import pyplot as plt
 from sb3_contrib import ARS
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.utils import set_random_seed
 from stable_baselines3.common.vec_env import VecNormalize
 
 from env.quadruped_gym_env import QuadrupedGymEnv
+from quadruped_spring.env.wrappers.obs_flattening_wrapper import ObsFlatteningWrapper
 from quadruped_spring.env.wrappers.rest_wrapper import RestWrapper
 from quadruped_spring.utils.monitor_state import MonitorState
 from quadruped_spring.utils.video_recording import VideoRec
-
-# NOTE
-# For changing simulation time steps number the callback updates the torques
-# change the appropriate settings inside the go1/go1_config... file :D
 
 SEED = 24
 
@@ -28,11 +27,11 @@ LEARNING_ALGS = {"ars": ARS}
 LEARNING_ALG = "ars"
 SUB_FOLDER = "jumping_in_place/07_15"
 ENV_ID = "QuadrupedSpring-v0"
-ID = "4"
+ID = "4" #"4" with springs
 MODEL = "best_model"
 
 REC_VIDEO = False  # Enable for video recording
-SAVE_PLOTS = False  # Enable for save plots of the episode
+SAVE_PLOTS = True  # Enable for save plots of the episode
 RENDER = True  # For rendering
 EVAL_EPISODES = 1  # Number of episodes to simulate
 ENABLE_ENV_RANDOMIZATION = False  # For enable env randomization

@@ -25,11 +25,11 @@ class LandingWrapper(gym.Wrapper):
         def wrapper(self, *args, **kwargs):
             """Temporary switch motor control gain"""
             if self.env.are_springs_enabled():
-                kp = 60.0
-                kd = 2.0
+                kp = 15.0
+                kd = .4
             else:
-                kp = 60.0
-                kd = 2.0
+                kp = 15.0
+                kd = .4
             tmp_save_motor_kp = self.env.robot._motor_model._kp
             tmp_save_motor_kd = self.env.robot._motor_model._kd
             self.env.robot._motor_model._kp = kp
@@ -41,7 +41,7 @@ class LandingWrapper(gym.Wrapper):
 
         return wrapper
 
-    @temporary_switch_motor_control_gain
+    # @temporary_switch_motor_control_gain
     def landing_phase(self):
         self.env.landing_callback.activate()
         action = self._landing_action
@@ -105,12 +105,16 @@ class LandingCallback:
     # Put your external torques here guy!
     def _compute_torques(self):
         # raise RuntimeError('Please implement me :(')
+        torque_ff = self._env.landingController()
+        print("Spring torques: ",self._env.get_springs_torques())
+        # torque_ff += self._env.get_springs_torques()
 
-        return np.ones(12) * 0
+        return torque_ff
 
     def compute_torques(self):
         if self.counter % self.step_interval == 0:
             self.desired_torques = self._compute_torques()
+        print("FF torques: ", self.desired_torques)
         return self.desired_torques
 
     def _callback_step(self):
