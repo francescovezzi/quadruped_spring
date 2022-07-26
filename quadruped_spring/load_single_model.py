@@ -25,9 +25,10 @@ SEED = 24
 # Agent selection
 LEARNING_ALGS = {"ars": ARS}
 LEARNING_ALG = "ars"
-SUB_FOLDER = "jumping_in_place/07_15"
+# SUB_FOLDER = "jumping_in_place/07_15"
+SUB_FOLDER = "jumping_forward/07_15"
 ENV_ID = "QuadrupedSpring-v0"
-ID = "4" #"4" with springs
+ID = "5" #"2/5" with springs, "4 without" for jumping forward, or "4" with, "3" without for jump in place
 MODEL = "best_model"
 
 REC_VIDEO = False  # Enable for video recording
@@ -85,6 +86,7 @@ if os.path.isfile(args_file):
         loaded_args = yaml.load(f, Loader=yaml.UnsafeLoader)  # pytype: disable=module-attr
         if loaded_args["env_kwargs"] is not None:
             env_kwargs = loaded_args["env_kwargs"]
+            env_kwargs["verbose"] = 1
             if RENDER:
                 env_kwargs["render"] = True
             env_kwargs["task_env"] = "ENDLESS_JUMPING"

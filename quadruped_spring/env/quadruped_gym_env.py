@@ -19,6 +19,8 @@ from gym import spaces
 from gym.utils import seeding
 
 import cvxpy as cp
+from test_code_gen.cpg_solver import cpg_solve
+import pickle
 import pinocchio as pin
 from pinocchio.explog import log
 from pinocchio.robot_wrapper import RobotWrapper
@@ -660,7 +662,7 @@ class QuadrupedGymEnv(gym.Env):
             foot_poses[i, :] = np.array(self.robot.getFootPositionAndVelocity(foot_indices[i])[0]) - base_pos
             foot_vels[i, :] = np.array(self.robot.getFootPositionAndVelocity(foot_indices[i])[1]) - base_vel
             J_leg[i], _ = self.robot.ComputeJacobianAndPosition(i)
-
+#
         # Get contact forces:
         F_contact = np.zeros(4)
         contacts = pybullet.getContactPoints(self.robot.quadruped, self.plane)
@@ -728,32 +730,57 @@ class QuadrupedGymEnv(gym.Env):
         # print("des_base_acc: ", des_base_acc)
         # print("des_base_ang_acc: ", des_base_ang_acc)
         # Cost matrices
-        S = 80 * np.eye(6)
-        alpha = 0.001
-        beta = 0.1
-        # Define and solve the CVXPY problem.
-        ## Some parameters (max force, friction coefficient)
-        Fz_max = 40
-        frict_coeff = 1
-        #####
-        F = cp.Variable(n)
-        constr = []
-        for foot in range(4):
-            # index [foot*3+2] means Fz of foot X.
-            constr += [0 <= F[foot * 3 + 2], F[foot * 3 + 2] <= Fz_max]
-            constr += [-frict_coeff * F[foot * 3 + 2] <= F[foot * 3], F[foot * 3] <= frict_coeff * F[foot * 3 + 2]]
-            constr += [-frict_coeff * F[foot * 3 + 2] <= F[foot * 3 + 1], F[foot * 3 + 1] <= frict_coeff * F[foot * 3 + 2]]
-            ### ADD CONSTRAINT ON SWING LEGS
-            if F_contact[foot] == 0:
-                constr += [F[foot * 3 + 2] == 0]
+        # S = 80 * np.eye(6)
+        # alpha = 0.001
+        # beta = 0.1
+        # # Define and solve the CVXPY problem.
+        # ## Some parameters (max force, friction coefficient)
+        # Fz_max = 40
+        # frict_coeff = 1
+        # #####
+    
+        # F = cp.Variable(n)
+        # constr = []
+        # for foot in range(4):
+        #     # index [foot*3+2] means Fz of foot X.
+        #     constr += [0 <= F[foot * 3 + 2], F[foot * 3 + 2] <= Fz_max]
+        #     constr += [-frict_coeff * F[foot * 3 + 2] <= F[foot * 3], F[foot * 3] <= frict_coeff * F[foot * 3 + 2]]
+        #     constr += [-frict_coeff * F[foot * 3 + 2] <= F[foot * 3 + 1], F[foot * 3 + 1] <= frict_coeff * F[foot * 3 + 2]]
+        #     ### ADD CONSTRAINT ON SWING LEGS
+        #     if F_contact[foot] == 0:
+        #         constr += [F[foot * 3 + 2] == 0]
 
-        cost = cp.quad_form((A @ F - bd), S)  #+ alpha*cp.norm(F)**2 #+ beta*cp.norm(F-F_prev)**2
+        # cost = cp.quad_form((A @ F - bd), S)  #+ alpha*cp.norm(F)**2 #+ beta*cp.norm(F-F_prev)**2
 
-        prob = cp.Problem(cp.Minimize(cost), constr)
+        # prob = cp.Problem(cp.Minimize(cost), constr)
 
-        prob.solve()
+        # prob.solve()
+        # If in contact F_contact[i] = 0, else F_contact[i]=1
+        F_contact[F_contact!=0] = 10 # 10 is a temp reassignment variable
+        F_contact[F_contact==0] = 1
+        F_contact[F_contact==10] = 0
 
-        F_leg = F.value
+        print("Constraint contact forces: ", F_contact)
+
+        with open('test_code_gen/problem.pickle', 'rb') as f:
+            prob = pickle.load(f)
+
+        prob.param_dict['A'].value = A
+        prob.param_dict['bd'].value = bd
+        prob.param_dict['F_contact'].value = F_contact
+
+        prob.register_solve('CPG', cpg_solve)
+        prob.solve(method='CPG')
+
+        
+        # for foot in range(4):
+        #     if F_contact[foot] == 0:
+        #         prob.var_dict['F'].value[foot*3:foot*3+3] = 0.0
+
+        F_leg = prob.var_dict['F'].value
+        print("Force is: ", F_leg)
+        if np.any(np.abs(F_leg) > 40.1):
+            raise "Force outside of bounds"
 
         torque_ff = np.zeros(12)
 
